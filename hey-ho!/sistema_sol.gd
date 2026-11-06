@@ -47,3 +47,18 @@ func anunciar_derrota() -> void:
 	var t := create_tween()
 	t.tween_property(self, "apagado", 0.0, 2.0)
 	cambio_noche.emit(true)
+
+static func _normalizar(v: Vector3) -> Vector3:
+	var largo := sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
+	if largo == 0.0:
+		return Vector3.ZERO
+	return v / largo
+
+static func lambert(normal: Vector3, hacia_luz: Vector3) -> float:
+	var n := _normalizar(normal)
+	var l := _normalizar(hacia_luz)
+	return maxf(0.0, n.dot(l))
+
+func prediccion_piso() -> float:
+	var hacia_luz := sol.global_transform.basis.z
+	return sol.light_energy * sol.light_color.r * lambert(Vector3.UP, hacia_luz)
