@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://mcamedpp4gbq"]
 
-[ext_resource type="Script" uid="uid://baau766y000uf" path="res://sistema_sol.gd" id="1_l7qun"]
-[ext_resource type="Script" uid="uid://csvhdmhx2cxae" path="res://ciclo_dia.gd" id="2_fntjl"]
+[ext_resource type="Script" uid="uid://baau766y000uf" path="res://ScriptsZonaA/sistema_sol.gd" id="1_l7qun"]
+[ext_resource type="Script" uid="uid://csvhdmhx2cxae" path="res://ScriptsZonaA/ciclo_dia.gd" id="2_fntjl"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vql5j"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
