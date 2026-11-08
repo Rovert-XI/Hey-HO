@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://cxrjsrmelbbsl"]
+
+[ext_resource type="Script" uid="uid://sok0udsv5rqf" path="res://ScriptsZonaB/luz_parpadeante.gd" id="1_21en6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13qdw"]
+albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xrivr"]
+material = SubResource("StandardMaterial3D_13qdw")
+size = Vector3(10, 1, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x4l8m"]
+albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_21en6"]
+material = SubResource("StandardMaterial3D_x4l8m")
+size = Vector3(18, 0.2, 11)
+
+[node name="ZonaB" type="Node3D" unique_id=512741483]
+
+[node name="LuzReflejoMar" type="OmniLight3D" parent="." unique_id=1174421161]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7641287, -0.8023448, 0.16836834)
+light_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
+shadow_enabled = true
+omni_range = 10.0
+omni_attenuation = 2.0
+script = ExtResource("1_21en6")
+
+[node name="LuzReflejoMar2" type="OmniLight3D" parent="." unique_id=1340269015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.706, 1.4, -2.507)
+light_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
+shadow_enabled = true
+omni_range = 20.0
+omni_attenuation = 2.0
+script = ExtResource("1_21en6")
+semilla = 15
+
+[node name="LuzReflejoMar3" type="OmniLight3D" parent="." unique_id=1411688820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.652, 1, 3.365)
+light_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
+shadow_enabled = true
+omni_range = 15.0
+omni_attenuation = 2.0
+script = ExtResource("1_21en6")
+semilla = 20
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=108237781]
+transform = Transform3D(1, 0, 0, 0, 0.70258313, 0.7116017, 0, -0.7116017, 0.70258313, 2.959046, 3.1869583, 3.718635)
+projection = 1
+size = 12.0
+near = 0.003
+
+[node name="Plataforma" type="MeshInstance3D" parent="." unique_id=334019240]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
+mesh = SubResource("BoxMesh_xrivr")
+
+[node name="Plataforma2" type="MeshInstance3D" parent="." unique_id=1581285905]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.7715178)
+mesh = SubResource("BoxMesh_xrivr")
+
+[node name="Agua" type="MeshInstance3D" parent="." unique_id=1518218980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -1, 0)
+mesh = SubResource("BoxMesh_21en6")
