@@ -73,3 +73,8 @@ desfase = Vector3(0, 12, 0.01)
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=541175609]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.122000694, 1.5954351, -6.924284)
 mesh = SubResource("BoxMesh_ticvn")
+
+[node name="Sol" type="DirectionalLight3D" parent="." unique_id=1279161931]
+shadow_enabled = true
+shadow_bias = 3.0
+shadow_normal_bias = 6.0
