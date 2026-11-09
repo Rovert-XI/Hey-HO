@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://dnrp6psx1ka11"]
+
+[ext_resource type="Script" uid="uid://dhvhe5f7hqtea" path="res://contorl_jugador.gd" id="1_q4wug"]
+[ext_resource type="Script" uid="uid://cxp4d8dt3gqfb" path="res://lector_entrada.gd" id="2_gdjdl"]
+[ext_resource type="Script" uid="uid://b5id8v41ev61a" path="res://orientador.gd" id="3_6eotj"]
+[ext_resource type="Script" uid="uid://da608b1jxgalf" path="res://motor.gd" id="4_nknid"]
+[ext_resource type="Script" uid="uid://2fcqpyon520o" path="res://luz_jugador.gd" id="5_e2xqd"]
+[ext_resource type="Script" uid="uid://c7pqpun72v61x" path="res://camera_seguidora.gd" id="5_toaxk"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toaxk"]
+albedo_color = Color(0.83014524, 0.81369406, 3.85046e-07, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0m3pf"]
+material = SubResource("StandardMaterial3D_toaxk")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ik31s"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e2xqd"]
+albedo_color = Color(0.74509805, 1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ik31s"]
+material = SubResource("StandardMaterial3D_e2xqd")
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r4kde"]
+albedo_color = Color(1, 0.654902, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ticvn"]
+material = SubResource("StandardMaterial3D_r4kde")
+size = Vector3(20, 2.5610352, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ticvn"]
+albedo_color = Color(0.29803923, 0.8352941, 0.25882354, 1)
+roughness = 0.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_ik31s"]
+material = SubResource("StandardMaterial3D_ticvn")
+
+[node name="ZonaC" type="Node3D" unique_id=1115641480]
+
+[node name="Jugador" type="CharacterBody3D" parent="." unique_id=172857029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76599276, 0)
+motion_mode = 1
+script = ExtResource("1_q4wug")
+
+[node name="Modelo" type="Node3D" parent="Jugador" unique_id=96548850]
+
+[node name="Cuerpo" type="MeshInstance3D" parent="Jugador/Modelo" unique_id=39467257]
+mesh = SubResource("BoxMesh_0m3pf")
+
+[node name="LectorEntrada" type="Node" parent="Jugador" unique_id=879093357]
+script = ExtResource("2_gdjdl")
+
+[node name="Orientador" type="Node" parent="Jugador" unique_id=1240527769 node_paths=PackedStringArray("modelo")]
+script = ExtResource("3_6eotj")
+modelo = NodePath("../Modelo")
+
+[node name="Motor" type="Node" parent="Jugador" unique_id=213695689]
+script = ExtResource("4_nknid")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Jugador" unique_id=102591290]
+shape = SubResource("BoxShape3D_ik31s")
+
+[node name="LuzJugador" type="OmniLight3D" parent="Jugador" unique_id=1436676376]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.53693, 0)
+light_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
+script = ExtResource("5_e2xqd")
+
+[node name="Piso" type="MeshInstance3D" parent="." unique_id=1740312771]
+mesh = SubResource("BoxMesh_ik31s")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=303228170 node_paths=PackedStringArray("objetivo", "motor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.225, 0)
+size = 10.0
+script = ExtResource("5_toaxk")
+objetivo = NodePath("../Jugador")
+motor = NodePath("../Jugador/Motor")
+desfase = Vector3(0, 12, 0.01)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=541175609]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.122000694, 1.5954351, -6.924284)
+mesh = SubResource("BoxMesh_ticvn")
+
+[node name="Sol" type="DirectionalLight3D" parent="." unique_id=1279161931]
+shadow_bias = 3.0
+shadow_normal_bias = 6.0
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=522173069]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0098491, 2.6567302)
+mesh = SubResource("SphereMesh_ik31s")
