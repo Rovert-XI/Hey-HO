@@ -29,6 +29,13 @@ albedo_color = Color(1, 0.654902, 1, 1)
 material = SubResource("StandardMaterial3D_r4kde")
 size = Vector3(20, 2.5610352, 0.5)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ticvn"]
+albedo_color = Color(0.29803923, 0.8352941, 0.25882354, 1)
+roughness = 0.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_ik31s"]
+material = SubResource("StandardMaterial3D_ticvn")
+
 [node name="ZonaC" type="Node3D" unique_id=1115641480]
 
 [node name="Jugador" type="CharacterBody3D" parent="." unique_id=172857029]
@@ -75,6 +82,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.122000694, 1.5954351, -6.92
 mesh = SubResource("BoxMesh_ticvn")
 
 [node name="Sol" type="DirectionalLight3D" parent="." unique_id=1279161931]
-shadow_enabled = true
 shadow_bias = 3.0
 shadow_normal_bias = 6.0
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=522173069]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0098491, 2.6567302)
+mesh = SubResource("SphereMesh_ik31s")
