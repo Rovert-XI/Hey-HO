@@ -1,6 +1,12 @@
 [gd_scene format=3 uid="uid://cxrjsrmelbbsl"]
 
 [ext_resource type="Script" uid="uid://sok0udsv5rqf" path="res://ScriptsZonaB/luz_parpadeante.gd" id="1_21en6"]
+[ext_resource type="Script" uid="uid://bybf4rkpaykla" path="res://ScriptsZonaB/disparador.gd" id="2_af74f"]
+[ext_resource type="Script" uid="uid://dhvhe5f7hqtea" path="res://ScriptsZonaC/contorl_jugador.gd" id="3_xykrd"]
+[ext_resource type="Script" uid="uid://cxp4d8dt3gqfb" path="res://ScriptsZonaC/lector_entrada.gd" id="4_ofdnd"]
+[ext_resource type="Script" uid="uid://b5id8v41ev61a" path="res://ScriptsZonaC/orientador.gd" id="5_y58oy"]
+[ext_resource type="Script" uid="uid://da608b1jxgalf" path="res://ScriptsZonaC/motor.gd" id="6_086nr"]
+[ext_resource type="Script" uid="uid://2fcqpyon520o" path="res://ScriptsZonaC/luz_jugador.gd" id="7_3erou"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13qdw"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
@@ -15,6 +21,16 @@ albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_21en6"]
 material = SubResource("StandardMaterial3D_x4l8m")
 size = Vector3(18, 0.2, 11)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xrivr"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toaxk"]
+albedo_color = Color(0.83014524, 0.81369406, 3.85046e-07, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_266tf"]
+material = SubResource("StandardMaterial3D_toaxk")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w00in"]
 
 [node name="ZonaB" type="Node3D" unique_id=512741483]
 
@@ -44,7 +60,7 @@ omni_attenuation = 2.0
 script = ExtResource("1_21en6")
 semilla = 20
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=108237781]
+[node name="CameraSeguidora" type="Camera3D" parent="." unique_id=108237781]
 transform = Transform3D(1, 0, 0, 0, 0.70258313, 0.7116017, 0, -0.7116017, 0.70258313, 2.959046, 3.1869583, 3.718635)
 projection = 1
 size = 12.0
@@ -61,3 +77,52 @@ mesh = SubResource("BoxMesh_xrivr")
 [node name="Agua" type="MeshInstance3D" parent="." unique_id=1518218980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -1, 0)
 mesh = SubResource("BoxMesh_21en6")
+
+[node name="Disparador" type="Area3D" parent="." unique_id=572695603]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.495794, -3.1260743)
+collision_mask = 9
+script = ExtResource("2_af74f")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Disparador" unique_id=1651613197]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8972876, -0.3704989, 0.94384813)
+shape = SubResource("BoxShape3D_xrivr")
+
+[node name="LuzEvento" type="OmniLight3D" parent="." unique_id=1709201245]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.902172, 0.9809339, -2.16574)
+light_color = Color(0.8392157, 0.22745098, 0.22745098, 1)
+light_energy = 0.0
+omni_range = 4.0
+omni_attenuation = 2.0
+
+[node name="SistemaEventos" type="Node" parent="." unique_id=1234611545]
+
+[node name="Jugador" type="CharacterBody3D" parent="." unique_id=387963471]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76599276, 0)
+collision_mask = 3
+motion_mode = 1
+script = ExtResource("3_xykrd")
+
+[node name="Modelo" type="Node3D" parent="Jugador" unique_id=263502837]
+
+[node name="Cuerpo" type="MeshInstance3D" parent="Jugador/Modelo" unique_id=681865704]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.1496253)
+mesh = SubResource("BoxMesh_266tf")
+
+[node name="LectorEntrada" type="Node" parent="Jugador" unique_id=1690760703]
+script = ExtResource("4_ofdnd")
+
+[node name="Orientador" type="Node" parent="Jugador" unique_id=859394078 node_paths=PackedStringArray("modelo")]
+script = ExtResource("5_y58oy")
+modelo = NodePath("../Modelo")
+
+[node name="Motor" type="Node" parent="Jugador" unique_id=836700799]
+script = ExtResource("6_086nr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Jugador" unique_id=1145980833]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.1496253)
+shape = SubResource("BoxShape3D_w00in")
+
+[node name="LuzJugador" type="OmniLight3D" parent="Jugador" unique_id=1146657980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.53693, 0)
+light_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
+script = ExtResource("7_3erou")
