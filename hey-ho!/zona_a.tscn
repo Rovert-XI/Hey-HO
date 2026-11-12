@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://csvhdmhx2cxae" path="res://ciclo_dia.gd" id="2_fntjl"]
 [ext_resource type="Script" uid="uid://dbr8rbtfmtedi" path="res://sistema_sogas.gd" id="3_fntjl"]
 [ext_resource type="Script" uid="uid://cxhffgiyn2wg0" path="res://loro.gd" id="4_e2n66"]
+[ext_resource type="Script" uid="uid://kfrry6paltoy" path="res://cielo_atardecer.gd" id="5_57wwi"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vql5j"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
@@ -38,7 +39,7 @@ albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_7m1rt"]
 material = SubResource("StandardMaterial3D_x4l8m")
-size = Vector3(18, 0.2, 11)
+size = Vector3(60, 0.2, 18)
 
 [sub_resource type="BoxMesh" id="BoxMesh_rfomo"]
 size = Vector3(0.5, 0.1, 0.5)
@@ -59,6 +60,7 @@ sky_material = SubResource("ProceduralSkyMaterial_q7fi5")
 background_mode = 2
 sky = SubResource("Sky_7yjhc")
 ambient_light_source = 3
+ambient_light_color = Color(0.79607844, 0.8862745, 0.99607843, 1)
 tonemap_mode = 2
 
 [node name="ZonaA" type="Node3D" unique_id=288960767]
@@ -80,11 +82,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.25, 0)
 mesh = SubResource("BoxMesh_bpjvm")
 
 [node name="Agua" type="MeshInstance3D" parent="." unique_id=1440181770]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -1, 3)
 mesh = SubResource("BoxMesh_7m1rt")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1794371836]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 2.5, 15, 0)
+transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 2.5, 7.5, 13)
 projection = 1
 current = true
 size = 9.0
@@ -125,10 +127,11 @@ shadow_enabled = true
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2093544556]
 environment = SubResource("Environment_bm02b")
 
-[node name="SistemaSol" type="Node" parent="." unique_id=594944895 node_paths=PackedStringArray("sol", "entorno")]
+[node name="SistemaSol" type="Node" parent="." unique_id=594944895 node_paths=PackedStringArray("sol", "entorno", "cielo")]
 script = ExtResource("1_l7qun")
 sol = NodePath("../Sol")
 entorno = NodePath("../WorldEnvironment")
+cielo = NodePath("../Cielo")
 
 [node name="CicloDia" type="Node" parent="SistemaSol" unique_id=1885987964]
 script = ExtResource("2_fntjl")
@@ -139,3 +142,7 @@ sistema_sol = NodePath("../SistemaSol")
 
 [node name="Loro" type="Node3D" parent="." unique_id=1701385707]
 script = ExtResource("4_e2n66")
+
+[node name="Cielo" type="CanvasLayer" parent="." unique_id=793549763 node_paths=PackedStringArray("entorno")]
+script = ExtResource("5_57wwi")
+entorno = NodePath("../WorldEnvironment")

@@ -17,9 +17,9 @@ const ROJO := Color("#D63A3A")
 
 # Por plataforma: dónde está cada soga, su tamaño y el valor (x o z) con el que se elige cuál se desgasta
 const SOGAS := {
-	"lavadora": {"pos": [Vector3(0.0, 0.05, -1.375), Vector3(3.0, 0.05, -1.375)], "size": Vector3(0.12, 0.08, 1.25), "ancla": [0.0, 3.0]},
-	"tendedero": {"pos": [Vector3(3.5, 0.05, 1.375), Vector3(6.0, 0.05, 1.375)], "size": Vector3(0.12, 0.08, 1.25), "ancla": [3.5, 6.0]},
-	"despacho": {"pos": [Vector3(-0.6, 0.05, -0.4), Vector3(-0.6, 0.05, 0.4)], "size": Vector3(1.2, 0.08, 0.12), "ancla": [-0.4, 0.4]},
+	"lavadora": {"pos": [Vector3(0.0, 0.07, -1.375), Vector3(3.0, 0.07, -1.375)], "size": Vector3(0.14, 0.14, 1.25), "ancla": [0.0, 3.0]},
+	"tendedero": {"pos": [Vector3(3.5, 0.07, 1.375), Vector3(6.0, 0.07, 1.375)], "size": Vector3(0.14, 0.14, 1.25), "ancla": [3.5, 6.0]},
+	"despacho": {"pos": [Vector3(-0.6, 0.07, -0.4), Vector3(-0.6, 0.07, 0.4)], "size": Vector3(1.2, 0.14, 0.14), "ancla": [-0.4, 0.4]},
 }
 
 @export var sistema_sol: SistemaSol
