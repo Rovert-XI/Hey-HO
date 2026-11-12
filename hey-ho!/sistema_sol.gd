@@ -18,6 +18,8 @@ signal cambio_noche(es_noche: bool)
 var era_noche := false
 var peligro := 0.0
 var apagado := 1.0
+var _tween_derrota: Tween
+var _tween_nivel: Tween
 
 func _ready() -> void:
 	aplicar_hora()
@@ -46,9 +48,29 @@ func poner_peligro(resistencia_min: float) -> void:
 	peligro = peligro_soga(resistencia_min)
 
 func anunciar_derrota() -> void:
-	var t := create_tween()
-	t.tween_property(self, "apagado", 0.0, 2.0)
+	if _tween_derrota and _tween_derrota.is_valid():
+		_tween_derrota.kill()
+	_tween_derrota = create_tween()
+	_tween_derrota.tween_property(self, "apagado", 0.0, 2.0)
 	cambio_noche.emit(true)
+
+func poner_nivel(n: int, suave := true) -> void:
+	var i := clampi(n - 1, 0, horas_por_nivel.size() - 1)
+	var destino := horas_por_nivel[i]
+	reiniciar_luz()
+	if suave:
+		_tween_nivel = create_tween()
+		_tween_nivel.tween_property(ciclo, "hora", destino, duracion_transicion)
+	else:
+		ciclo.hora = destino
+
+func reiniciar_luz() -> void:
+	if _tween_derrota and _tween_derrota.is_valid():
+		_tween_derrota.kill()
+	if _tween_nivel and _tween_nivel.is_valid():
+		_tween_nivel.kill()
+	peligro = 0.0
+	apagado = 1.0
 
 static func _normalizar(v: Vector3) -> Vector3:
 	var largo := sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
@@ -64,17 +86,3 @@ static func lambert(normal: Vector3, hacia_luz: Vector3) -> float:
 func prediccion_piso() -> float:
 	var hacia_luz := sol.global_transform.basis.z
 	return sol.light_energy * sol.light_color.r * lambert(Vector3.UP, hacia_luz)
-	
-func poner_nivel(n: int, suave := true) -> void:
-	var i := clampi(n - 1, 0, horas_por_nivel.size() - 1)
-	var destino := horas_por_nivel[i]
-	peligro = 0.0
-	apagado = 1.0
-	if suave:
-		create_tween().tween_property(ciclo, "hora", destino, duracion_transicion)
-	else:
-		ciclo.hora = destino
-
-func reiniciar_luz() -> void:
-	peligro = 0.0
-	apagado = 1.0
