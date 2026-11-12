@@ -1,0 +1,151 @@
+[gd_scene format=3 uid="uid://c40st4eg17poy"]
+
+[ext_resource type="Texture2D" uid="uid://bemc3xjwu38er" path="res://Assets/Designer (4).png" id="1_a4fcl"]
+[ext_resource type="Script" uid="uid://lp4gjrmntp3r" path="res://Scenes/jugador.gd" id="1_qklek"]
+[ext_resource type="Texture2D" uid="uid://c7a5g652nk05q" path="res://Assets/Designer (3).png" id="2_l6p47"]
+[ext_resource type="Texture2D" uid="uid://br5p21xoayuv4" path="res://Assets/Tileset.png" id="3_l6p47"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qklek"]
+atlas = ExtResource("1_a4fcl")
+region = Rect2(20, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_opocv"]
+atlas = ExtResource("1_a4fcl")
+region = Rect2(778, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_krtvh"]
+atlas = ExtResource("1_a4fcl")
+region = Rect2(20, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dt6xu"]
+atlas = ExtResource("2_l6p47")
+region = Rect2(20, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_76chc"]
+atlas = ExtResource("2_l6p47")
+region = Rect2(399, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sew30"]
+atlas = ExtResource("2_l6p47")
+region = Rect2(778, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j30df"]
+atlas = ExtResource("2_l6p47")
+region = Rect2(1157, 0, 379, 1024)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qklek")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_opocv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_krtvh")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dt6xu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_76chc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sew30")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j30df")
+}],
+"loop": 1,
+"name": &"walking",
+"speed": 5.0
+}]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_xrivr"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xrivr"]
+size = Vector3(0.03, 14.379913, 9.005829)
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wi6ju"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13qdw"]
+size = Vector3(0.67692566, 0.68304443, 0.22507477)
+
+[node name="avance11" type="Node3D" unique_id=1495792604]
+
+[node name="Jugador" type="CharacterBody3D" parent="." unique_id=1468341603]
+transform = Transform3D(0.99999005, -0.004444738, 0.00046071564, 0.0044448683, 0.9999901, -0.00028236047, -0.00045945737, 0.00028440333, 0.9999999, -13.59721, 14.490562, 18.92924)
+script = ExtResource("1_qklek")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Jugador" unique_id=988504744]
+transform = Transform3D(1, 1.7999469e-10, 0, 1.7863044e-10, 1.0000001, -2.910383e-11, 0, -2.910383e-11, 1, 0, 0, 0)
+pixel_size = 0.03
+texture_filter = 0
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"idle"
+frame_progress = 0.4770912
+
+[node name="StaticBody3D2" type="StaticBody3D" parent="Jugador" unique_id=448863680]
+transform = Transform3D(0.99999005, 0.004444869, -0.00045945606, -0.0044447384, 0.9999904, 0.00028440548, 0.00046071695, -0.0002823584, 0.9999999, -1.0039749, -0.99583054, -1.0001774)
+physics_material_override = SubResource("PhysicsMaterial_xrivr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Jugador" unique_id=1219928562]
+transform = Transform3D(0.004202598, 0.0044448697, -0.9999816, 0.0002636807, 0.99999064, 0.0044460166, 0.9999913, -0.0002823585, 0.0042013833, 0.02818489, -1.5445023, 0.0002937317)
+shape = SubResource("BoxShape3D_xrivr")
+
+[node name="SueloBase" type="StaticBody3D" parent="." unique_id=1508739964]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06393194, 0)
+physics_material_override = SubResource("PhysicsMaterial_wi6ju")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SueloBase" unique_id=309976839]
+transform = Transform3D(16, 0, 0, 0, 8, 0, 0, 0, 4, -12.132095, 3.0630279, 19.030514)
+shape = SubResource("BoxShape3D_13qdw")
+
+[node name="Sprite3D" type="Sprite3D" parent="SueloBase" unique_id=114727486]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -12.612686, 3.073526, 18.829502)
+pixel_size = 0.03
+texture_filter = 0
+texture = ExtResource("3_l6p47")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 48)
+
+[node name="SueloBase2" type="StaticBody3D" parent="." unique_id=826496988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.31435, 0.06393194, 0)
+physics_material_override = SubResource("PhysicsMaterial_wi6ju")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SueloBase2" unique_id=121156130]
+transform = Transform3D(16, 0, 0, 0, 8, 0, 0, 0, 4, -12.132095, 3.0630279, 19.030514)
+shape = SubResource("BoxShape3D_13qdw")
+
+[node name="Sprite3D" type="Sprite3D" parent="SueloBase2" unique_id=1480705589]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -12.612686, 3.073526, 18.829502)
+pixel_size = 0.03
+texture_filter = 0
+texture = ExtResource("3_l6p47")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 48)
+
+[node name="SueloBase3" type="StaticBody3D" parent="." unique_id=2137993678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.14664, 0.06393194, 0)
+physics_material_override = SubResource("PhysicsMaterial_wi6ju")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SueloBase3" unique_id=1715496260]
+transform = Transform3D(16, 0, 0, 0, 8, 0, 0, 0, 4, -12.132095, 3.0630279, 19.030514)
+shape = SubResource("BoxShape3D_13qdw")
+
+[node name="Sprite3D" type="Sprite3D" parent="SueloBase3" unique_id=123236133]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -12.612686, 3.073526, 18.829502)
+pixel_size = 0.03
+texture_filter = 0
+texture = ExtResource("3_l6p47")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 48)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1190837170]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.463758, 9.641365, 36.51991)

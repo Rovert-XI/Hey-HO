@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://p6xxjj13migd"]
+
+[ext_resource type="Script" uid="uid://c2ygkeqrf068a" path="res://creador_vectores.gd" id="1_xp7yj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xrivr"]
+size = Vector2(100, 100)
+
+[node name="CreadorVectores" type="Area2D" unique_id=338097445]
+script = ExtResource("1_xp7yj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1728418191]
+position = Vector2(740, 334)
+shape = SubResource("RectangleShape2D_xrivr")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1154907803]
+position = Vector2(580, 330)
+scale = Vector2(-20.647089, -25.310434)

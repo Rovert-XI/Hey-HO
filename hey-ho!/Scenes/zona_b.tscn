@@ -15,6 +15,11 @@ albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
 material = SubResource("StandardMaterial3D_13qdw")
 size = Vector3(10, 1, 2)
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_xrivr"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_b1lj4"]
+size = Vector3(1, 1, 0.48394775)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x4l8m"]
 albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
 
@@ -70,6 +75,14 @@ near = 0.003
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
 mesh = SubResource("BoxMesh_xrivr")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="Plataforma" unique_id=1196656912]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 2, 2.1475067, 1.7239807, 1)
+physics_material_override = SubResource("PhysicsMaterial_xrivr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Plataforma/StaticBody3D" unique_id=543095047]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 2, -0.18972026, -1.6465147, -0.45821595)
+shape = SubResource("BoxShape3D_b1lj4")
+
 [node name="Plataforma2" type="MeshInstance3D" parent="." unique_id=1581285905]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.7715178)
 mesh = SubResource("BoxMesh_xrivr")
@@ -103,6 +116,7 @@ motion_mode = 1
 script = ExtResource("3_xykrd")
 
 [node name="Modelo" type="Node3D" parent="Jugador" unique_id=263502837]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.07797241)
 
 [node name="Cuerpo" type="MeshInstance3D" parent="Jugador/Modelo" unique_id=681865704]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.1496253)
@@ -118,11 +132,11 @@ modelo = NodePath("../Modelo")
 [node name="Motor" type="Node" parent="Jugador" unique_id=836700799]
 script = ExtResource("6_086nr")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Jugador" unique_id=1145980833]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.1496253)
-shape = SubResource("BoxShape3D_w00in")
-
 [node name="LuzJugador" type="OmniLight3D" parent="Jugador" unique_id=1146657980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.53693, 0)
 light_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
 script = ExtResource("7_3erou")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Jugador" unique_id=1145980833]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.0764575)
+shape = SubResource("BoxShape3D_w00in")
