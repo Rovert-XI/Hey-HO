@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://bdhwskywxybqs"]
+
+[ext_resource type="Texture2D" uid="uid://bggndnkmd5tx2" path="res://Assets/Camisa_limpia__1_-removebg-preview.png" id="1_3r7yy"]
+[ext_resource type="Script" uid="uid://c73ha5p5wswrd" path="res://camisa.gd" id="1_k6dp5"]
+[ext_resource type="PackedScene" uid="uid://p6xxjj13migd" path="res://creador_vectores.tscn" id="3_7qkxj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xrivr"]
+size = Vector2(164, 138)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_13qdw"]
+size = Vector2(1133, 20)
+
+[node name="SceneCreadorVectores" type="Node" unique_id=752743690]
+
+[node name="Camisa" type="RigidBody2D" parent="." unique_id=1793665181]
+position = Vector2(289, 463)
+script = ExtResource("1_k6dp5")
+
+[node name="Sprite2D" type="Sprite2D" parent="Camisa" unique_id=957996412]
+texture_filter = 1
+texture_repeat = 1
+texture = ExtResource("1_3r7yy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Camisa" unique_id=902134421]
+position = Vector2(3, 1)
+shape = SubResource("RectangleShape2D_xrivr")
+
+[node name="CreadorVectores" parent="." unique_id=338097445 instance=ExtResource("3_7qkxj")]
+position = Vector2(0, 49)
+
+[node name="Paredes" type="Node" parent="." unique_id=764855822]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Paredes" unique_id=44854079]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Paredes/StaticBody2D" unique_id=1721594250]
+position = Vector2(584.5, 21)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="Paredes" unique_id=2132038410]
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Paredes/StaticBody2D2" unique_id=1833159754]
+position = Vector2(580, 654)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="StaticBody2D3" type="StaticBody2D" parent="Paredes" unique_id=2130886593]
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Paredes/StaticBody2D3" unique_id=1504908462]
+position = Vector2(8.999998, 331.3)
+rotation = 1.5707964
+scale = Vector2(0.8, 0.8)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="StaticBody2D4" type="StaticBody2D" parent="Paredes" unique_id=918958500]
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Paredes/StaticBody2D4" unique_id=411194409]
+position = Vector2(1144.9999, 338)
+rotation = 1.5707964
+scale = Vector2(0.8, 0.8)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[connection signal="vector_created" from="CreadorVectores" to="Camisa" method="launch"]
