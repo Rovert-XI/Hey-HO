@@ -57,6 +57,8 @@ func poner_peligro(resistencia_min: float) -> void:
 
 
 func anunciar_derrota() -> void:
+	var t := create_tween()
+	t.tween_property(self, "apagado", 0.0, 2.0)
 	if _tween_derrota and _tween_derrota.is_valid():
 		_tween_derrota.kill()
 	_tween_derrota = create_tween()
