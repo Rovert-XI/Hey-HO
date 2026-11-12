@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_dbe56"]
+[ext_resource type="Script" uid="uid://tfmf7banhqtq" path="res://juego/tienda.gd" id="2_7mb01"]
+[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_6u84h"]
+
+[node name="Tienda" type="Control" unique_id=689307199]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_dbe56")
+script = ExtResource("2_7mb01")
+
+[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_6u84h")]
+layout_mode = 1
+anchors_preset = 15
+
+[node name="Centro" type="CenterContainer" parent="." unique_id=641038985]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Centro" unique_id=2111575079]
+custom_minimum_size = Vector2(820, 0)
+layout_mode = 2
+
+[node name="Columna" type="VBoxContainer" parent="Centro/Panel" unique_id=519849988]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Titulo" type="Label" parent="Centro/Panel/Columna" unique_id=1237267235]
+layout_mode = 2
+theme_type_variation = &"LabelTitulo"
+theme_override_font_sizes/font_size = 44
+text = "TALLER DEL CARPINTERO"
+horizontal_alignment = 1
+
+[node name="Subtitulo" type="Label" parent="Centro/Panel/Columna" unique_id=1429763744]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+theme_override_font_sizes/font_size = 18
+text = "Refuerza tus sogas: 20 oro suman 25 de resistencia (solo si están bajo 75)."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="FilaOroTienda" type="HBoxContainer" parent="Centro/Panel/Columna" unique_id=724462206]
+layout_mode = 2
+alignment = 1
+
+[node name="Etiqueta" type="Label" parent="Centro/Panel/Columna/FilaOroTienda" unique_id=1554665231]
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "Oro ahorrado:"
+
+[node name="OroDisponible" type="Label" parent="Centro/Panel/Columna/FilaOroTienda" unique_id=7080557]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelOro"
+text = "0 oro"
+
+[node name="ListaSogas" type="VBoxContainer" parent="Centro/Panel/Columna" unique_id=1920598265]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Separador" type="HSeparator" parent="Centro/Panel/Columna" unique_id=281711588]
+layout_mode = 2
+
+[node name="BotonContinuar" type="Button" parent="Centro/Panel/Columna" unique_id=94797437]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"BotonPrimario"
+text = "SIGUIENTE DÍA"

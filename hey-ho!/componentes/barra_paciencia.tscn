@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_6sil0"]
+[ext_resource type="Script" uid="uid://8ae3pv43bfv3" path="res://componentes/barra_paciencia.gd" id="2_pr7lf"]
+
+[node name="BarraPaciencia" type="PanelContainer" unique_id=662499796]
+custom_minimum_size = Vector2(264, 0)
+theme = ExtResource("1_6sil0")
+theme_type_variation = &"PanelHUD"
+script = ExtResource("2_pr7lf")
+
+[node name="Columna" type="VBoxContainer" parent="." unique_id=1230616591]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Fila" type="HBoxContainer" parent="Columna" unique_id=1302784283]
+layout_mode = 2
+
+[node name="Nombre" type="Label" parent="Columna/Fila" unique_id=189395637]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Barco 1"
+
+[node name="Espacio" type="Control" parent="Columna/Fila" unique_id=2053183263]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Prendas" type="HBoxContainer" parent="Columna/Fila" unique_id=252309369]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="Barra" type="ProgressBar" parent="Columna" unique_id=476253403]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+theme_type_variation = &"BarraVerde"
+max_value = 1.0
+step = 0.001
+value = 1.0
+show_percentage = false

@@ -1,0 +1,116 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_sbdsb"]
+[ext_resource type="Script" uid="uid://cwx11l80ae2xx" path="res://menus/creditos.gd" id="2_5v8vf"]
+[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_lo8rh"]
+[ext_resource type="Texture2D" uid="uid://cmo6lqagi5i5x" path="res://assets/logo_rovert_xi.png" id="4_mulwv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ha6aa"]
+atlas = ExtResource("4_mulwv")
+region = Rect2(150, 240, 780, 540)
+
+[node name="Creditos" type="Control" unique_id=235478006]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_sbdsb")
+script = ExtResource("2_5v8vf")
+
+[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_lo8rh")]
+layout_mode = 1
+anchors_preset = 15
+
+[node name="Centro" type="CenterContainer" parent="." unique_id=1854202479]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Centro" unique_id=214746036]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+
+[node name="Columna" type="VBoxContainer" parent="Centro/Panel" unique_id=176455624]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PanelLogo" type="PanelContainer" parent="Centro/Panel/Columna" unique_id=689270428]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"PanelLogo"
+
+[node name="Logo" type="TextureRect" parent="Centro/Panel/Columna/PanelLogo" unique_id=1652734417]
+custom_minimum_size = Vector2(250, 173)
+layout_mode = 2
+texture = SubResource("AtlasTexture_ha6aa")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Titulo" type="Label" parent="Centro/Panel/Columna" unique_id=2101662464]
+layout_mode = 2
+theme_type_variation = &"LabelTitulo"
+theme_override_font_sizes/font_size = 40
+text = "CRÉDITOS"
+horizontal_alignment = 1
+
+[node name="Equipo" type="Label" parent="Centro/Panel/Columna" unique_id=2133870060]
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Equipo Rovert XI · grupo 18B"
+horizontal_alignment = 1
+
+[node name="Integrante1" type="VBoxContainer" parent="Centro/Panel/Columna" unique_id=1203713226]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Nombre" type="Label" parent="Centro/Panel/Columna/Integrante1" unique_id=610127484]
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "Isabella Villarraga Ramírez"
+horizontal_alignment = 1
+
+[node name="Rol" type="Label" parent="Centro/Panel/Columna/Integrante1" unique_id=1390937471]
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Género y referentes"
+horizontal_alignment = 1
+
+[node name="Integrante2" type="VBoxContainer" parent="Centro/Panel/Columna" unique_id=258601809]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Nombre" type="Label" parent="Centro/Panel/Columna/Integrante2" unique_id=1831168139]
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "Kevin Steven Beltrán González"
+horizontal_alignment = 1
+
+[node name="Rol" type="Label" parent="Centro/Panel/Columna/Integrante2" unique_id=783583316]
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Narrativa y mundo"
+horizontal_alignment = 1
+
+[node name="Integrante3" type="VBoxContainer" parent="Centro/Panel/Columna" unique_id=19426606]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Nombre" type="Label" parent="Centro/Panel/Columna/Integrante3" unique_id=1037223697]
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "Carlos Andrés Rojas Melo"
+horizontal_alignment = 1
+
+[node name="Rol" type="Label" parent="Centro/Panel/Columna/Integrante3" unique_id=1329176548]
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Mecánicas, ciclo e intención visual"
+horizontal_alignment = 1
+
+[node name="BotonVolver" type="Button" parent="Centro/Panel/Columna" unique_id=1258786922]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"BotonPrimario"
+text = "VOLVER"

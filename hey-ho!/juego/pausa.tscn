@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_8wc4k"]
+[ext_resource type="Script" uid="uid://cmjj3fyog66xr" path="res://juego/pausa.gd" id="2_rrec2"]
+
+[node name="Pausa" type="Control" unique_id=705217742]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_8wc4k")
+script = ExtResource("2_rrec2")
+
+[node name="Velo" type="ColorRect" parent="." unique_id=135266126]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.050980393, 0.105882354, 0.16470589, 0.65)
+
+[node name="Centro" type="CenterContainer" parent="." unique_id=1183783811]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Centro" unique_id=797478379]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+
+[node name="Columna" type="VBoxContainer" parent="Centro/Panel" unique_id=1756843275]
+layout_mode = 2
+
+[node name="Titulo" type="Label" parent="Centro/Panel/Columna" unique_id=1128212801]
+layout_mode = 2
+theme_type_variation = &"LabelTitulo"
+text = "PAUSA"
+horizontal_alignment = 1
+
+[node name="BotonContinuar" type="Button" parent="Centro/Panel/Columna" unique_id=167441377]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+theme_type_variation = &"BotonPrimario"
+text = "CONTINUAR"
+
+[node name="BotonReiniciar" type="Button" parent="Centro/Panel/Columna" unique_id=2037147299]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+text = "REINICIAR DÍA"
+
+[node name="BotonMenu" type="Button" parent="Centro/Panel/Columna" unique_id=825286849]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+text = "MENÚ PRINCIPAL"

@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bg6eujbgbacyf" path="res://juego/demo_nivel.gd" id="1_msagb"]
+[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="2_iuxn0"]
+[ext_resource type="PackedScene" path="res://juego/hud.tscn" id="3_wn7of"]
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="4_qd3r3"]
+
+[node name="DemoNivel" type="Node" unique_id=2073604653]
+script = ExtResource("1_msagb")
+
+[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("2_iuxn0")]
+anchors_preset = 15
+
+[node name="Hud" parent="." unique_id=273287611 instance=ExtResource("3_wn7of")]
+unique_name_in_owner = true
+
+[node name="CapaAyuda" type="CanvasLayer" parent="." unique_id=1855545858]
+layer = 5
+
+[node name="Ayuda" type="Label" parent="CapaAyuda" unique_id=1953193847]
+custom_minimum_size = Vector2(300, 0)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -76.0
+offset_right = 316.0
+offset_bottom = -14.0
+theme = ExtResource("4_qd3r3")
+theme_type_variation = &"LabelPeque"
+theme_override_font_sizes/font_size = 13
+text = "DEMO · 1/2/3 equipar · ESPACIO cargar · G pago · P pedido · S/D sogas · R reparar · L loro · ENTER aprobar · X perder"
+autowrap_mode = 3
