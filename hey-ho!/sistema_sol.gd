@@ -10,12 +10,16 @@ signal cambio_noche(es_noche: bool)
 @export var ambiente_dia := 1.0
 @export var ambiente_noche := 0.2
 @export var rojo_peligro := Color("#D63A3A")
+@export var horas_por_nivel: Array[float] = [14.0, 14.6667, 15.3333, 16.0, 16.6667]
+@export var duracion_transicion := 2.0
 
 @onready var ciclo: CicloDia = $CicloDia
 
 var era_noche := false
 var peligro := 0.0
 var apagado := 1.0
+var _tween_derrota: Tween
+var _tween_nivel: Tween
 
 func _ready() -> void:
 	aplicar_hora()
@@ -44,9 +48,29 @@ func poner_peligro(resistencia_min: float) -> void:
 	peligro = peligro_soga(resistencia_min)
 
 func anunciar_derrota() -> void:
-	var t := create_tween()
-	t.tween_property(self, "apagado", 0.0, 2.0)
+	if _tween_derrota and _tween_derrota.is_valid():
+		_tween_derrota.kill()
+	_tween_derrota = create_tween()
+	_tween_derrota.tween_property(self, "apagado", 0.0, 2.0)
 	cambio_noche.emit(true)
+
+func poner_nivel(n: int, suave := true) -> void:
+	var i := clampi(n - 1, 0, horas_por_nivel.size() - 1)
+	var destino := horas_por_nivel[i]
+	reiniciar_luz()
+	if suave:
+		_tween_nivel = create_tween()
+		_tween_nivel.tween_property(ciclo, "hora", destino, duracion_transicion)
+	else:
+		ciclo.hora = destino
+
+func reiniciar_luz() -> void:
+	if _tween_derrota and _tween_derrota.is_valid():
+		_tween_derrota.kill()
+	if _tween_nivel and _tween_nivel.is_valid():
+		_tween_nivel.kill()
+	peligro = 0.0
+	apagado = 1.0
 
 static func _normalizar(v: Vector3) -> Vector3:
 	var largo := sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
