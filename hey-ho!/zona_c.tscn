@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://dnrp6psx1ka11"]
 
-[ext_resource type="Script" uid="uid://dhvhe5f7hqtea" path="res://contorl_jugador.gd" id="1_q4wug"]
-[ext_resource type="Script" uid="uid://cxp4d8dt3gqfb" path="res://lector_entrada.gd" id="2_gdjdl"]
-[ext_resource type="Script" uid="uid://b5id8v41ev61a" path="res://orientador.gd" id="3_6eotj"]
-[ext_resource type="Script" uid="uid://da608b1jxgalf" path="res://motor.gd" id="4_nknid"]
-[ext_resource type="Script" uid="uid://2fcqpyon520o" path="res://luz_jugador.gd" id="5_e2xqd"]
-[ext_resource type="Script" uid="uid://c7pqpun72v61x" path="res://camera_seguidora.gd" id="5_toaxk"]
+[ext_resource type="Script" uid="uid://dhvhe5f7hqtea" path="res://scripts/contorl_jugador.gd" id="1_q4wug"]
+[ext_resource type="Script" uid="uid://cxp4d8dt3gqfb" path="res://scripts/lector_entrada.gd" id="2_gdjdl"]
+[ext_resource type="Script" uid="uid://b5id8v41ev61a" path="res://scripts/orientador.gd" id="3_6eotj"]
+[ext_resource type="Script" uid="uid://da608b1jxgalf" path="res://scripts/motor.gd" id="4_nknid"]
+[ext_resource type="Script" uid="uid://2fcqpyon520o" path="res://scripts/luz_jugador.gd" id="5_e2xqd"]
+[ext_resource type="Script" uid="uid://c7pqpun72v61x" path="res://scripts/camera_seguidora.gd" id="5_toaxk"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toaxk"]
 albedo_color = Color(0.83014524, 0.81369406, 3.85046e-07, 1)
