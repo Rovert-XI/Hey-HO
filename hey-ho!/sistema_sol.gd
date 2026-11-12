@@ -10,6 +10,8 @@ signal cambio_noche(es_noche: bool)
 @export var ambiente_dia := 1.0
 @export var ambiente_noche := 0.2
 @export var rojo_peligro := Color("#D63A3A")
+@export var horas_por_nivel: Array[float] = [14.0, 14.6667, 15.3333, 16.0, 16.6667]
+@export var duracion_transicion := 2.0
 
 @onready var ciclo: CicloDia = $CicloDia
 
@@ -62,3 +64,17 @@ static func lambert(normal: Vector3, hacia_luz: Vector3) -> float:
 func prediccion_piso() -> float:
 	var hacia_luz := sol.global_transform.basis.z
 	return sol.light_energy * sol.light_color.r * lambert(Vector3.UP, hacia_luz)
+	
+func poner_nivel(n: int, suave := true) -> void:
+	var i := clampi(n - 1, 0, horas_por_nivel.size() - 1)
+	var destino := horas_por_nivel[i]
+	peligro = 0.0
+	apagado = 1.0
+	if suave:
+		create_tween().tween_property(ciclo, "hora", destino, duracion_transicion)
+	else:
+		ciclo.hora = destino
+
+func reiniciar_luz() -> void:
+	peligro = 0.0
+	apagado = 1.0
