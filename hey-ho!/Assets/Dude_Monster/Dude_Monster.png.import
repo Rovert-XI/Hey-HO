@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bggndnkmd5tx2"
-path="res://.godot/imported/Camisa_limpia__1_-removebg-preview.png-033d98578f41bb1c0c57e9196c43cf6f.ctex"
+uid="uid://23w2anq3ir7c"
+path="res://.godot/imported/Dude_Monster.png-6a80865f2a6823e78b7398ea21102eb3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Camisa_limpia__1_-removebg-preview.png"
-dest_files=["res://.godot/imported/Camisa_limpia__1_-removebg-preview.png-033d98578f41bb1c0c57e9196c43cf6f.ctex"]
+source_file="res://Assets/Dude_Monster/Dude_Monster.png"
+dest_files=["res://.godot/imported/Dude_Monster.png-6a80865f2a6823e78b7398ea21102eb3.ctex"]
 
 [params]
 

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://owixp7c583jv"
-path.s3tc="res://.godot/imported/Designer (2).png-df3e780f7ea6dd2a8e61d2df39ef27ac.s3tc.ctex"
+uid="uid://c7a5g652nk05q"
+path.s3tc="res://.godot/imported/Designer (3).png-0d6276c7541f86370b48497cbc7e5d56.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Assets/Designer (2).png"
-dest_files=["res://.godot/imported/Designer (2).png-df3e780f7ea6dd2a8e61d2df39ef27ac.s3tc.ctex"]
+source_file="res://Assets/Cuchito_Player/Designer (3).png"
+dest_files=["res://.godot/imported/Designer (3).png-0d6276c7541f86370b48497cbc7e5d56.s3tc.ctex"]
 
 [params]
 

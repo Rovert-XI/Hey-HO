@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://23w2anq3ir7c"
-path="res://.godot/imported/Dude_Monster.png-dc34d17823b03d0ad54bdcfd7b0aff6c.ctex"
+uid="uid://ddu4ev6be1yro"
+path="res://.godot/imported/Inventory_Close-Sheet2.png-8d3b0e0b119ca78f97c5d87082f2e386.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Dude_Monster.png"
-dest_files=["res://.godot/imported/Dude_Monster.png-dc34d17823b03d0ad54bdcfd7b0aff6c.ctex"]
+source_file="res://Assets/Cuadros_Inventario/Inventory_Close-Sheet2.png"
+dest_files=["res://.godot/imported/Inventory_Close-Sheet2.png-8d3b0e0b119ca78f97c5d87082f2e386.ctex"]
 
 [params]
 

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c7a5g652nk05q"
-path.s3tc="res://.godot/imported/Designer (3).png-921b89adfa7c9d5fc97d45d87fea8188.s3tc.ctex"
+uid="uid://cwmbqw64ag8ty"
+path.s3tc="res://.godot/imported/Dude_Monster_Run_6.png-68fc03fbdeca6859a4a8da56100f7954.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Assets/Designer (3).png"
-dest_files=["res://.godot/imported/Designer (3).png-921b89adfa7c9d5fc97d45d87fea8188.s3tc.ctex"]
+source_file="res://Assets/Dude_Monster/Dude_Monster_Run_6.png"
+dest_files=["res://.godot/imported/Dude_Monster_Run_6.png-68fc03fbdeca6859a4a8da56100f7954.s3tc.ctex"]
 
 [params]
 
