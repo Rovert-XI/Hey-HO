@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://p6xxjj13migd"]
 
-[ext_resource type="Script" uid="uid://c2ygkeqrf068a" path="res://creador_vectores.gd" id="1_xp7yj"]
+[ext_resource type="Script" uid="uid://c2ygkeqrf068a" path="res://ScriptCuchito_Resortera/creador_vectores.gd" id="1_bo8c0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xrivr"]
 size = Vector2(304, 278)
 
 [node name="CreadorVectores" type="Area2D" unique_id=338097445]
-script = ExtResource("1_xp7yj")
+script = ExtResource("1_bo8c0")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1728418191]
 position = Vector2(576, 299)
