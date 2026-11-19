@@ -23,3 +23,9 @@ mono_crash.*.json
 *.exe
 # Uncomment if your project does not version PCK files as runtime dependencies.
 # *.pck
+hey-ho\!/ScriptsZonaA/sistema_sol.gd
+hey-ho\!/ScriptsZonaA/ciclo_dia.gd.uid
+hey-ho\!/ScriptsZonaA/fotometro.gd
+hey-ho\!/ScriptsZonaA/fotometro.gd.uid
+hey-ho\!/ScriptsZonaA/sistema_sol.gd.uid
+hey-ho\!/vectores.gd
