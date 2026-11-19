@@ -3,14 +3,14 @@ extends RefCounted
 ## Cambia de escena con un fundido a negro. Sin autoload: todo es estático.
 ## Uso:  Navegador.ir_a(self, Navegador.MENU)
 
-const SPLASH := "res://ui/menus/splash.tscn"
-const MENU := "res://ui/menus/menu_principal.tscn"
-const NIVELES := "res://ui/menus/seleccion_nivel.tscn"
-const OPCIONES := "res://ui/menus/opciones.tscn"
-const CREDITOS := "res://ui/menus/creditos.tscn"
-const RESULTADO := "res://ui/juego/resultado.tscn"
-const TIENDA := "res://ui/juego/tienda.tscn"
-const FINAL := "res://ui/juego/final_reparacion.tscn"
+const SPLASH := "res://menus/splash.tscn"
+const MENU := "res://menus/menu_principal.tscn"
+const NIVELES := "res://menus/seleccion_nivel.tscn"
+const OPCIONES := "res://menus/opciones.tscn"
+const CREDITOS := "res://menus/creditos.tscn"
+const RESULTADO := "res://juego/resultado.tscn"
+const TIENDA := "res://juego/tienda.tscn"
+const FINAL := "res://juego/final_reparacion.tscn"
 
 static var _ocupado := false
 

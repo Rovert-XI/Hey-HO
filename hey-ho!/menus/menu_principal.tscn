@@ -1,103 +1,111 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cxwwam2dtlgpr"]
 
 [ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_hkbml"]
 [ext_resource type="Script" uid="uid://cm1f2foglg084" path="res://menus/menu_principal.gd" id="2_sfeh3"]
-[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_dtkk1"]
+[ext_resource type="Texture2D" uid="uid://0tvilt88xxu0" path="res://assets/fondo_hub.png" id="3_igs5g"]
 
 [node name="MenuPrincipal" type="Control" unique_id=659243522]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("1_hkbml")
 script = ExtResource("2_sfeh3")
 
-[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_dtkk1")]
-layout_mode = 1
-anchors_preset = 15
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1546079258]
 
-[node name="Margen" type="MarginContainer" parent="." unique_id=922870982]
-layout_mode = 0
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=1079853008]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_igs5g")
+expand_mode = 1
+
+[node name="Margen" type="MarginContainer" parent="CanvasLayer/TextureRect" unique_id=922870982]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 4.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_hkbml")
 theme_override_constants/margin_left = 72
 theme_override_constants/margin_top = 40
 theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 56
 
-[node name="Columnas" type="HBoxContainer" parent="Margen" unique_id=1591683566]
+[node name="Columnas" type="HBoxContainer" parent="CanvasLayer/TextureRect/Margen" unique_id=1591683566]
 layout_mode = 2
+size_flags_horizontal = 4
 
-[node name="Izquierda" type="VBoxContainer" parent="Margen/Columnas" unique_id=1337072718]
+[node name="Izquierda" type="VBoxContainer" parent="CanvasLayer/TextureRect/Margen/Columnas" unique_id=1337072718]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="Titulo" type="Label" parent="Margen/Columnas/Izquierda" unique_id=463281106]
+[node name="Titulo" type="Label" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=463281106]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"LabelTitulo"
-theme_override_font_sizes/font_size = 96
 theme_override_constants/outline_size = 14
+theme_override_font_sizes/font_size = 125
 text = "¡HEY HO!"
 
-[node name="Subtitulo" type="Label" parent="Margen/Columnas/Izquierda" unique_id=374705650]
+[node name="Subtitulo" type="Label" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=374705650]
 layout_mode = 2
 theme_type_variation = &"LabelSubtitulo"
 text = "Lavandería pirata en alta mar"
+horizontal_alignment = 1
+vertical_alignment = 2
 
-[node name="Espacio" type="Control" parent="Margen/Columnas/Izquierda" unique_id=972890332]
+[node name="Espacio" type="Control" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=972890332]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 
-[node name="BotonJugar" type="Button" parent="Margen/Columnas/Izquierda" unique_id=1384602]
+[node name="BotonJugar" type="Button" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=1384602]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 56)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 4
 theme_type_variation = &"BotonPrimario"
 text = "JUGAR"
 
-[node name="BotonNiveles" type="Button" parent="Margen/Columnas/Izquierda" unique_id=1623994628]
+[node name="BotonNiveles" type="Button" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=1623994628]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 56)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 4
 text = "ELEGIR DÍA"
 
-[node name="BotonOpciones" type="Button" parent="Margen/Columnas/Izquierda" unique_id=1376930342]
+[node name="BotonOpciones" type="Button" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=1376930342]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 56)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 4
+size_flags_vertical = 4
 text = "OPCIONES"
 
-[node name="BotonCreditos" type="Button" parent="Margen/Columnas/Izquierda" unique_id=1895572387]
+[node name="BotonCreditos" type="Button" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=1895572387]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 56)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 4
 text = "CRÉDITOS"
 
-[node name="BotonSalir" type="Button" parent="Margen/Columnas/Izquierda" unique_id=1916805267]
+[node name="BotonSalir" type="Button" parent="CanvasLayer/TextureRect/Margen/Columnas/Izquierda" unique_id=1916805267]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 56)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 4
 text = "SALIR"
 
-[node name="Derecha" type="Control" parent="Margen/Columnas" unique_id=2043699545]
+[node name="Derecha" type="Control" parent="CanvasLayer/TextureRect/Margen/Columnas" unique_id=2043699545]
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="Pie" type="Label" parent="." unique_id=253736199]
-layout_mode = 0
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -36.0
-offset_right = 420.0
-offset_bottom = -10.0
-theme_type_variation = &"LabelPeque"
-text = "Un juego de Rovert XI · v0.1"
