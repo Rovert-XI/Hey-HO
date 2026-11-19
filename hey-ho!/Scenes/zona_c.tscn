@@ -7,11 +7,11 @@
 [ext_resource type="Script" uid="uid://2fcqpyon520o" path="res://scripts/luz_jugador.gd" id="5_e2xqd"]
 [ext_resource type="Script" uid="uid://c7pqpun72v61x" path="res://scripts/camera_seguidora.gd" id="5_toaxk"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toaxk"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wvgtq"]
 albedo_color = Color(0.83014524, 0.81369406, 3.85046e-07, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_0m3pf"]
-material = SubResource("StandardMaterial3D_toaxk")
+material = SubResource("StandardMaterial3D_wvgtq")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ik31s"]
 

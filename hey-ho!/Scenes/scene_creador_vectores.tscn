@@ -1,0 +1,341 @@
+[gd_scene format=3 uid="uid://bdhwskywxybqs"]
+
+[ext_resource type="Script" uid="uid://c73ha5p5wswrd" path="res://ScriptCuchito_Resortera/camisa.gd" id="1_vpi6q"]
+[ext_resource type="Texture2D" uid="uid://bggndnkmd5tx2" path="res://Assets/Items_Objetos/Camisa_limpia__1_-removebg-preview.png" id="2_8qcc5"]
+[ext_resource type="PackedScene" uid="uid://p6xxjj13migd" path="res://Scenes/creador_vectores.tscn" id="3_upggm"]
+[ext_resource type="Script" uid="uid://bfonnumk7cbi4" path="res://Scenes/pirata_player.gd" id="4_qbax5"]
+[ext_resource type="Texture2D" uid="uid://bemc3xjwu38er" path="res://Assets/Cuchito_Player/Designer (4).png" id="5_hy43r"]
+[ext_resource type="Script" uid="uid://nfiq3g5wvumk" path="res://Scenes/cuchito_movement.gd" id="5_qbax5"]
+[ext_resource type="Texture2D" uid="uid://c7a5g652nk05q" path="res://Assets/Cuchito_Player/Designer (3).png" id="6_3y1w1"]
+[ext_resource type="Texture2D" uid="uid://br5p21xoayuv4" path="res://Assets/Tileset/Tileset.png" id="7_3y1w1"]
+[ext_resource type="Texture2D" uid="uid://dkhaifmy6aycw" path="res://Assets/Cuadros_Inventario/Inventory-Cell.png" id="9_7i1mn"]
+[ext_resource type="Texture2D" uid="uid://bsju1aiggaqwu" path="res://Assets/Cuadros_Inventario/Inventory-Chosen.png" id="10_2uead"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xrivr"]
+size = Vector2(164, 138)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_13qdw"]
+size = Vector2(1133, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qklek"]
+atlas = ExtResource("5_hy43r")
+region = Rect2(20, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_opocv"]
+atlas = ExtResource("5_hy43r")
+region = Rect2(778, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_krtvh"]
+atlas = ExtResource("5_hy43r")
+region = Rect2(20, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dt6xu"]
+atlas = ExtResource("6_3y1w1")
+region = Rect2(20, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_76chc"]
+atlas = ExtResource("6_3y1w1")
+region = Rect2(399, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sew30"]
+atlas = ExtResource("6_3y1w1")
+region = Rect2(778, 0, 379, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j30df"]
+atlas = ExtResource("6_3y1w1")
+region = Rect2(1157, 0, 379, 1024)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qklek")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_opocv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_krtvh")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dt6xu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_76chc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sew30")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j30df")
+}],
+"loop": 1,
+"name": &"walking",
+"speed": 5.0
+}]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_xrivr"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b1lj4"]
+size = Vector2(186, 303.5)
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_13qdw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_njqwk"]
+
+[node name="SceneCreadorVectores" type="Node" unique_id=752743690]
+
+[node name="Camisa" type="RigidBody2D" parent="." unique_id=1793665181]
+position = Vector2(857, 500)
+script = ExtResource("1_vpi6q")
+
+[node name="Sprite2D" type="Sprite2D" parent="Camisa" unique_id=957996412]
+texture_filter = 1
+texture_repeat = 1
+texture = ExtResource("2_8qcc5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Camisa" unique_id=902134421]
+position = Vector2(3, 1)
+shape = SubResource("RectangleShape2D_xrivr")
+
+[node name="CreadorVectores" parent="." unique_id=338097445 instance=ExtResource("3_upggm")]
+position = Vector2(0, 49)
+
+[node name="Paredes" type="Node" parent="." unique_id=764855822]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Paredes" unique_id=44854079]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Paredes/StaticBody2D" unique_id=1721594250]
+position = Vector2(584.5, 21)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="Paredes" unique_id=2132038410]
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Paredes/StaticBody2D2" unique_id=1833159754]
+position = Vector2(580, 654)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="StaticBody2D3" type="StaticBody2D" parent="Paredes" unique_id=2130886593]
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Paredes/StaticBody2D3" unique_id=1504908462]
+position = Vector2(8.999998, 331.3)
+rotation = 1.5707964
+scale = Vector2(0.8, 0.8)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="StaticBody2D4" type="StaticBody2D" parent="Paredes" unique_id=918958500]
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Paredes/StaticBody2D4" unique_id=411194409]
+position = Vector2(1144.9999, 338)
+rotation = 1.5707964
+scale = Vector2(0.8, 0.8)
+shape = SubResource("RectangleShape2D_13qdw")
+
+[node name="Pirata_player" type="Node" parent="." unique_id=2120288077]
+script = ExtResource("4_qbax5")
+
+[node name="Cuchito" type="CharacterBody2D" parent="Pirata_player" unique_id=1390851997]
+position = Vector2(60, -47)
+script = ExtResource("5_qbax5")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Pirata_player/Cuchito" unique_id=1525463978]
+position = Vector2(76, 521)
+scale = Vector2(0.6, 0.6)
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"idle"
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Pirata_player/Cuchito" unique_id=1555154138]
+position = Vector2(78, 533)
+physics_material_override = SubResource("PhysicsMaterial_xrivr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pirata_player/Cuchito" unique_id=71799496]
+position = Vector2(75, 534.75)
+shape = SubResource("RectangleShape2D_b1lj4")
+
+[node name="Piso" type="Node" parent="." unique_id=1208091815]
+
+[node name="SueloBase" type="StaticBody2D" parent="Piso" unique_id=151150000]
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase" unique_id=379325077]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase" unique_id=388679857]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase2" type="StaticBody2D" parent="Piso" unique_id=1982781612]
+position = Vector2(95, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase2" unique_id=1363134238]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase2" unique_id=1115440207]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase3" type="StaticBody2D" parent="Piso" unique_id=320675568]
+position = Vector2(190, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase3" unique_id=1262208837]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase3" unique_id=301227394]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase4" type="StaticBody2D" parent="Piso" unique_id=974050066]
+position = Vector2(285, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase4" unique_id=414123935]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase4" unique_id=1232820079]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase5" type="StaticBody2D" parent="Piso" unique_id=1095560749]
+position = Vector2(380, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase5" unique_id=1154667650]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase5" unique_id=879494399]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase6" type="StaticBody2D" parent="Piso" unique_id=379202689]
+position = Vector2(475, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase6" unique_id=797889976]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase6" unique_id=1872393158]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase7" type="StaticBody2D" parent="Piso" unique_id=666765293]
+position = Vector2(570, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase7" unique_id=1446379488]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase7" unique_id=1425321759]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase8" type="StaticBody2D" parent="Piso" unique_id=919026422]
+position = Vector2(665, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase8" unique_id=822382869]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase8" unique_id=1873437024]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase9" type="StaticBody2D" parent="Piso" unique_id=546542306]
+position = Vector2(760, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase9" unique_id=2054838131]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase9" unique_id=838298463]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase10" type="StaticBody2D" parent="Piso" unique_id=449410807]
+position = Vector2(854, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase10" unique_id=1192646857]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase10" unique_id=1617705765]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase11" type="StaticBody2D" parent="Piso" unique_id=1334190499]
+position = Vector2(949, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase11" unique_id=1165181080]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase11" unique_id=1212058557]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="SueloBase12" type="StaticBody2D" parent="Piso" unique_id=610758261]
+position = Vector2(1043, 0)
+physics_material_override = SubResource("PhysicsMaterial_13qdw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Piso/SueloBase12" unique_id=920769687]
+shape = SubResource("RectangleShape2D_njqwk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Piso/SueloBase12" unique_id=1465778586]
+texture_filter = 1
+position = Vector2(66, 671)
+texture = ExtResource("7_3y1w1")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 64)
+
+[node name="Inventario" type="Node" parent="." unique_id=68941774]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Inventario" unique_id=1742981311]
+
+[node name="TextureButton" type="TextureButton" parent="Inventario/CanvasLayer" unique_id=256680263]
+offset_left = 331.0
+offset_top = 756.0
+offset_right = 371.0
+offset_bottom = 796.0
+texture_normal = ExtResource("9_7i1mn")
+texture_pressed = ExtResource("10_2uead")
+
+[connection signal="vector_created" from="CreadorVectores" to="Camisa" method="launch"]
