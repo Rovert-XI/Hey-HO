@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://yvbhs74efvve"]
+
+[ext_resource type="Script" uid="uid://bnglkvyvnaa0y" path="res://Scenes/prenda_proyectil.gd" id="1_it5b4"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_xrivr"]
+size = Vector3(0.5, 0.3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xrivr"]
+size = Vector3(0.5, 0.3, 0.5)
+
+[node name="PrendaProyectil" type="RigidBody3D" unique_id=1518095379]
+script = ExtResource("1_it5b4")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=665178771]
+mesh = SubResource("BoxMesh_xrivr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1990030839]
+shape = SubResource("BoxShape3D_xrivr")

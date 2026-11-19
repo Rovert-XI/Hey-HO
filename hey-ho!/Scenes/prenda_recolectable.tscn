@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://dw76i27ua8uma"]
+
+[ext_resource type="Script" uid="uid://dpicyp4tqh2np" path="res://Scenes/prenda_recolectable.gd" id="1_u1d12"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13qdw"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_xrivr"]
+material = SubResource("StandardMaterial3D_13qdw")
+size = Vector3(0.5, 0.3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xrivr"]
+size = Vector3(0.5, 0.3, 0.5)
+
+[node name="PrendaRecolectable" type="Area3D" unique_id=1134208708]
+script = ExtResource("1_u1d12")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1357983351]
+mesh = SubResource("BoxMesh_xrivr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1217278164]
+shape = SubResource("BoxShape3D_xrivr")
