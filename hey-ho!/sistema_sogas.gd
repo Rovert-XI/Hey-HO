@@ -1,5 +1,10 @@
 class_name SistemaSogas
 extends Node3D
+## Sogas de las tres plataformas (lavadora, tendedero y despacho), dos por plataforma.
+##   Una soga en 0   -> la plataforma queda DESESTABILIZADA y la partida sigue hasta repararla.
+##   Las dos en 0    -> la plataforma se suelta y se PIERDE el nivel.
+##   Bajo 30         -> la soga se ve roja y la franja de la resortera se angosta (0,3 s -> 0,15 s).
+## Reparar: mantener una tecla 2 s junto a la plataforma (la lógica de la tecla la pone quien controla al jugador).
 
 signal soga_cambio(plataforma: String, indice: int, resistencia: float)
 signal plataforma_desestabilizada(plataforma: String, desestabilizada: bool)
@@ -15,16 +20,18 @@ const COSTO_REPARACION := 20
 const MADERA := Color("#8B5A2B")
 const ROJO := Color("#D63A3A")
 
-# Por plataforma: dónde está cada soga, su tamaño y el valor (x o z) con el que se elige cuál se desgasta
+# Por plataforma: dónde está cada soga, su tamaño y el valor (x o z) con el que se elige cuál se desgasta.
 const SOGAS := {
-	"lavadora": {"pos": [Vector3(0.0, 0.05, -1.375), Vector3(3.0, 0.05, -1.375)], "size": Vector3(0.12, 0.08, 1.25), "ancla": [0.0, 3.0]},
-	"tendedero": {"pos": [Vector3(3.5, 0.05, 1.375), Vector3(6.0, 0.05, 1.375)], "size": Vector3(0.12, 0.08, 1.25), "ancla": [3.5, 6.0]},
-	"despacho": {"pos": [Vector3(-0.6, 0.05, -0.4), Vector3(-0.6, 0.05, 0.4)], "size": Vector3(1.2, 0.08, 0.12), "ancla": [-0.4, 0.4]},
+	"lavadora": {"pos": [Vector3(0.0, 0.07, -1.375), Vector3(3.0, 0.07, -1.375)], "size": Vector3(0.14, 0.14, 1.25), "ancla": [0.0, 3.0]},
+	"tendedero": {"pos": [Vector3(3.5, 0.07, 1.375), Vector3(6.0, 0.07, 1.375)], "size": Vector3(0.14, 0.14, 1.25), "ancla": [3.5, 6.0]},
+	"despacho": {"pos": [Vector3(-0.6, 0.07, -0.4), Vector3(-0.6, 0.07, 0.4)], "size": Vector3(1.2, 0.14, 0.14), "ancla": [-0.4, 0.4]},
 }
 
 @export var sistema_sol: SistemaSol
 @export var desgaste_por_lanzamiento := 2.0
 @export var desgaste_por_pedido := 4.0
+## Multiplica todo el desgaste. Útil para DEMOSTRAR la mecánica sin jugar el nivel entero (por ejemplo 10).
+@export var multiplicador_desgaste := 1.0
 @export var modo_prueba := true
 
 var sogas := {
@@ -39,6 +46,7 @@ var perdido := false
 var plataforma_cercana := ""
 var reparacion_bloqueada := false
 
+
 func _ready() -> void:
 	_crear_visuales()
 	if modo_prueba:
@@ -47,11 +55,15 @@ func _ready() -> void:
 		nivel_perdido.connect(func(): print("nivel perdido"))
 		reparacion_cobrada.connect(func(c): print("cobro de reparación: ", c))
 
+
+# ------------------------------------------------------------------ Consultas
 static func ancho_franja(resistencia: float) -> float:
 	return 0.15 if resistencia < UMBRAL_PELIGRO else 0.3
 
+
 func resistencia_minima_de(p: String) -> float:
 	return minf(sogas[p][0], sogas[p][1])
+
 
 func resistencia_minima() -> float:
 	var m := RES_MAX
@@ -60,13 +72,36 @@ func resistencia_minima() -> float:
 			m = minf(m, r)
 	return m
 
+
+## La plataforma con la soga más dañada (la que se repara si no se indica otra).
+func plataforma_mas_danada() -> String:
+	var peor := "lavadora"
+	var menor := RES_MAX + 1.0
+	for p: String in sogas.keys():
+		for r: float in sogas[p]:
+			if r < menor:
+				menor = r
+				peor = p
+	return peor
+
+
+## Copia de las resistencias, para guardarlas entre niveles (por ejemplo en EstadoJuego.sogas).
+func datos() -> Dictionary:
+	return sogas.duplicate(true)
+
+
+# ------------------------------------------------------------------ Desgaste
 func registrar_lanzamiento(lado: String, x := NAN) -> void:
 	var p := "lavadora" if lado == "izquierda" else "tendedero"
 	_desgastar(p, x, desgaste_por_lanzamiento)
 
+
 func registrar_pedido(z := NAN) -> void:
 	_desgastar("despacho", z, desgaste_por_pedido)
 
+
+# ------------------------------------------------------------------ Reparación
+## Un paso de reparación. Devuelve true cuando se completa.
 func reparar(p: String, delta: float) -> bool:
 	if perdido:
 		return false
@@ -85,28 +120,60 @@ func reparar(p: String, delta: float) -> bool:
 		return true
 	return false
 
+
 func soltar_reparar(p: String) -> void:
 	if progreso[p] > 0.0:
 		progreso[p] = 0.0
 		reparacion_progreso.emit(p, 0.0)
 
-func reiniciar() -> void:
+
+## Llamar cada fotograma MIENTRAS la tecla de reparar está presionada.
+## Una reparación completa no se repite sola: hay que soltar la tecla y volver a mantenerla.
+func mantener_reparacion(p: String, delta: float) -> void:
+	if reparacion_bloqueada:
+		return
+	if reparar(p, delta):
+		reparacion_bloqueada = true
+
+
+## Llamar cuando se suelta la tecla de reparar.
+func soltar_reparacion() -> void:
+	reparacion_bloqueada = false
+	for p: String in sogas.keys():
+		soltar_reparar(p)
+
+
+# ------------------------------------------------------------------ Niveles
+## Carga resistencias guardadas (formato de datos()) y deja TODO coherente: repinta las sogas 3D,
+## avisa al HUD con soga_cambio, recalcula plataformas inestables y el peligro del sol.
+func cargar(guardado: Dictionary) -> void:
 	perdido = false
 	reparacion_bloqueada = false
 	for p: String in sogas.keys():
-		sogas[p] = [RES_MAX, RES_MAX]
 		progreso[p] = 0.0
 		desestab[p] = false
+		var v: Array = guardado.get(p, [RES_MAX, RES_MAX])
 		for i in 2:
-			_pintar(p, i)
+			sogas[p][i] = clampf(float(v[i]), 0.0, RES_MAX)
+			soga_cambio.emit(p, i, sogas[p][i])
+			if visuales.has(p + str(i)):
+				_pintar(p, i)
+		_revisar(p)
+
+
+func reiniciar() -> void:
+	cargar({})
 	if sistema_sol:
 		sistema_sol.reiniciar_luz()
 
+
+# ------------------------------------------------------------------ Interno
 func _desgastar(p: String, coord: float, cantidad: float) -> void:
 	if perdido:
 		return
 	var i := _soga_a_desgastar(p, coord)
-	_poner(p, i, sogas[p][i] - cantidad)
+	_poner(p, i, sogas[p][i] - cantidad * multiplicador_desgaste)
+
 
 func _soga_a_desgastar(p: String, coord: float) -> int:
 	if is_nan(coord):
@@ -114,11 +181,13 @@ func _soga_a_desgastar(p: String, coord: float) -> int:
 	var anclas: Array = SOGAS[p]["ancla"]
 	return 0 if absf(coord - float(anclas[0])) <= absf(coord - float(anclas[1])) else 1
 
+
 func _poner(p: String, i: int, valor: float) -> void:
 	sogas[p][i] = clampf(valor, 0.0, RES_MAX)
 	soga_cambio.emit(p, i, sogas[p][i])
 	_pintar(p, i)
 	_revisar(p)
+
 
 func _revisar(p: String) -> void:
 	var inestable: bool = sogas[p][0] <= 0.0 or sogas[p][1] <= 0.0
@@ -132,6 +201,7 @@ func _revisar(p: String) -> void:
 			sistema_sol.anunciar_derrota()
 	elif sistema_sol and not perdido:
 		sistema_sol.poner_peligro(resistencia_minima())
+
 
 func _crear_visuales() -> void:
 	for p: String in SOGAS.keys():
@@ -148,34 +218,23 @@ func _crear_visuales() -> void:
 			visuales[p + str(i)] = m
 			_pintar(p, i)
 
+
 func _pintar(p: String, i: int) -> void:
 	var r: float = sogas[p][i]
 	var m: MeshInstance3D = visuales[p + str(i)]
 	m.visible = r > 0.0
 	(m.material_override as StandardMaterial3D).albedo_color = MADERA.lerp(ROJO, SistemaSol.peligro_soga(r))
 
-func _mas_danada() -> String:
-	var peor := "lavadora"
-	var menor := RES_MAX + 1.0
-	for p: String in sogas.keys():
-		for r: float in sogas[p]:
-			if r < menor:
-				menor = r
-				peor = p
-	return peor
 
+# ------------------------------------------------------------------ Teclas de prueba (solo con modo_prueba)
 func _process(delta: float) -> void:
 	if not modo_prueba:
 		return
 	if Input.is_key_pressed(KEY_R):
-		if not reparacion_bloqueada:
-			var objetivo := plataforma_cercana if plataforma_cercana != "" else _mas_danada()
-			if reparar(objetivo, delta):
-				reparacion_bloqueada = true
+		mantener_reparacion(plataforma_cercana if plataforma_cercana != "" else plataforma_mas_danada(), delta)
 	else:
-		reparacion_bloqueada = false
-		for p: String in sogas.keys():
-			soltar_reparar(p)
+		soltar_reparacion()
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	var k := event as InputEventKey

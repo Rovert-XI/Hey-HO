@@ -1,0 +1,114 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_lq583"]
+[ext_resource type="Script" uid="uid://blmmlyryg06c5" path="res://juego/final_reparacion.gd" id="2_udpmd"]
+[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_bauop"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n245d"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.36862746, 0.23529412, 0.10980392, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 12
+
+[node name="FinalReparacion" type="Control" unique_id=1748056483]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_lq583")
+script = ExtResource("2_udpmd")
+
+[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_bauop")]
+layout_mode = 1
+anchors_preset = 15
+
+[node name="Barco" type="Control" parent="." unique_id=475504318]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 120.0
+offset_top = 330.0
+offset_right = 320.0
+offset_bottom = 470.0
+pivot_offset = Vector2(100, 100)
+
+[node name="Casco" type="Panel" parent="Barco" unique_id=1892066109]
+layout_mode = 0
+offset_top = 100.0
+offset_right = 200.0
+offset_bottom = 136.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_n245d")
+
+[node name="Mastil" type="ColorRect" parent="Barco" unique_id=209554275]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 10.0
+offset_right = 104.0
+offset_bottom = 102.0
+color = Color(0.36862746, 0.23529412, 0.10980392, 1)
+
+[node name="Vela" type="ColorRect" parent="Barco" unique_id=481699436]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 16.0
+offset_right = 176.0
+offset_bottom = 88.0
+color = Color(0.9647059, 0.90588236, 0.6901961, 1)
+
+[node name="Margen" type="MarginContainer" parent="." unique_id=1871279426]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+
+[node name="Columna" type="VBoxContainer" parent="Margen" unique_id=1690879136]
+layout_mode = 2
+
+[node name="Panel" type="PanelContainer" parent="Margen/Columna" unique_id=2005838613]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Contenido" type="VBoxContainer" parent="Margen/Columna/Panel" unique_id=1525351941]
+layout_mode = 2
+
+[node name="Titulo" type="Label" parent="Margen/Columna/Panel/Contenido" unique_id=1734408172]
+layout_mode = 2
+theme_type_variation = &"LabelTitulo"
+text = "¡BARCO REPARADO!"
+horizontal_alignment = 1
+
+[node name="Texto" type="Label" parent="Margen/Columna/Panel/Contenido" unique_id=1353699540]
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "Pagaste 300 de oro y zarpas al atardecer."
+horizontal_alignment = 1
+
+[node name="Botones" type="HBoxContainer" parent="Margen/Columna/Panel/Contenido" unique_id=2056413928]
+layout_mode = 2
+alignment = 1
+
+[node name="BotonOtraVez" type="Button" parent="Margen/Columna/Panel/Contenido/Botones" unique_id=2017703806]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 56)
+layout_mode = 2
+theme_type_variation = &"BotonPrimario"
+text = "JUGAR DE NUEVO"
+
+[node name="BotonMenu" type="Button" parent="Margen/Columna/Panel/Contenido/Botones" unique_id=1889508672]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 56)
+layout_mode = 2
+text = "MENÚ PRINCIPAL"

@@ -1,0 +1,156 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_yfl70"]
+[ext_resource type="Script" uid="uid://kawn7w0inen" path="res://juego/resultado.gd" id="2_vwe51"]
+[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_r73mu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_doq8n"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+corner_detail = 12
+
+[node name="Resultado" type="Control" unique_id=2083050842]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_yfl70")
+script = ExtResource("2_vwe51")
+
+[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_r73mu")]
+layout_mode = 1
+anchors_preset = 15
+
+[node name="Centro" type="CenterContainer" parent="." unique_id=1556673462]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Centro" unique_id=232555295]
+custom_minimum_size = Vector2(780, 0)
+layout_mode = 2
+
+[node name="Columna" type="VBoxContainer" parent="Centro/Panel" unique_id=865187264]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Titulo" type="Label" parent="Centro/Panel/Columna" unique_id=306479467]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelTitulo"
+theme_override_font_sizes/font_size = 48
+text = "DÍA 1 COMPLETADO"
+horizontal_alignment = 1
+
+[node name="Subtitulo" type="Label" parent="Centro/Panel/Columna" unique_id=1024631715]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "El capitán suma monedas para el barco."
+horizontal_alignment = 1
+
+[node name="FilaOro" type="HBoxContainer" parent="Centro/Panel/Columna" unique_id=1533146681]
+layout_mode = 2
+alignment = 1
+
+[node name="Moneda" type="Panel" parent="Centro/Panel/Columna/FilaOro" unique_id=533345616]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_doq8n")
+
+[node name="OroGanado" type="Label" parent="Centro/Panel/Columna/FilaOro" unique_id=1188251247]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelOro"
+theme_override_font_sizes/font_size = 56
+text = "0"
+
+[node name="ContenedorBarra" type="Control" parent="Centro/Panel/Columna" unique_id=320272199]
+custom_minimum_size = Vector2(440, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="BarraResultado" type="ProgressBar" parent="Centro/Panel/Columna/ContenedorBarra" unique_id=603632065]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"BarraCrema"
+max_value = 90.0
+show_percentage = false
+
+[node name="MarcaMinimo" type="ColorRect" parent="Centro/Panel/Columna/ContenedorBarra" unique_id=301210074]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 0.6
+anchor_right = 0.6
+anchor_bottom = 1.0
+offset_left = -2.0
+offset_top = -5.0
+offset_right = 2.0
+offset_bottom = 5.0
+color = Color(0.79607844, 0.8862745, 0.99607843, 1)
+
+[node name="TextoMinimo" type="Label" parent="Centro/Panel/Columna" unique_id=795836770]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Mínimo para pasar: 54 oro"
+horizontal_alignment = 1
+
+[node name="Estado" type="Label" parent="Centro/Panel/Columna" unique_id=1375263779]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelExito"
+theme_override_font_sizes/font_size = 34
+text = "¡APROBADO!"
+horizontal_alignment = 1
+
+[node name="Detalles" type="Label" parent="Centro/Panel/Columna" unique_id=1841335596]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+theme_override_font_sizes/font_size = 18
+text = "Clientes atendidos: 3 / 3"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Separador" type="HSeparator" parent="Centro/Panel/Columna" unique_id=385114564]
+layout_mode = 2
+
+[node name="Botones" type="HBoxContainer" parent="Centro/Panel/Columna" unique_id=860206426]
+layout_mode = 2
+alignment = 1
+
+[node name="BotonSiguiente" type="Button" parent="Centro/Panel/Columna/Botones" unique_id=1151897872]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 56)
+layout_mode = 2
+theme_type_variation = &"BotonPrimario"
+text = "IR AL TALLER"
+
+[node name="BotonReintentar" type="Button" parent="Centro/Panel/Columna/Botones" unique_id=1260285104]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 56)
+layout_mode = 2
+text = "REINTENTAR"
+
+[node name="BotonMenu" type="Button" parent="Centro/Panel/Columna/Botones" unique_id=1386002975]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 56)
+layout_mode = 2
+text = "MENÚ"

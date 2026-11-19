@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_yi6fk"]
+[ext_resource type="Script" uid="uid://leobqrosixy6" path="res://componentes/tarjeta_nivel.gd" id="2_cq0by"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g1vdl"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.46078432, 0.5350981, 0.62196076, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+corner_detail = 12
+
+[node name="TarjetaNivel" type="PanelContainer" unique_id=1049692776]
+custom_minimum_size = Vector2(180, 0)
+theme = ExtResource("1_yi6fk")
+theme_type_variation = &"PanelTarjeta"
+script = ExtResource("2_cq0by")
+
+[node name="Columna" type="VBoxContainer" parent="." unique_id=1799661329]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Perla" type="Panel" parent="Columna" unique_id=1599755276]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_g1vdl")
+
+[node name="Numero" type="Label" parent="Columna/Perla" unique_id=1364409960]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"LabelPerla"
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NombreDia" type="Label" parent="Columna" unique_id=1502015280]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelSubtitulo"
+text = "Día 1"
+horizontal_alignment = 1
+
+[node name="Clientes" type="Label" parent="Columna" unique_id=1613463789]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "3 clientes · 2:00"
+horizontal_alignment = 1
+
+[node name="Minimo" type="Label" parent="Columna" unique_id=160016833]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "Mínimo 54 oro"
+horizontal_alignment = 1
+
+[node name="Mejor" type="Label" parent="Columna" unique_id=284351988]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Sin superar"
+horizontal_alignment = 1
+
+[node name="Espacio" type="Control" parent="Columna" unique_id=1216483136]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Boton" type="Button" parent="Columna" unique_id=1616990683]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BotonPrimario"
+theme_override_font_sizes/font_size = 20
+text = "JUGAR"

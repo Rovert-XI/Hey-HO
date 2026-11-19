@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_dns0q"]
+[ext_resource type="Script" uid="uid://bi1r3ace01jgm" path="res://componentes/fila_soga.gd" id="2_ll8uv"]
+
+[node name="FilaSoga" type="VBoxContainer" unique_id=135462371]
+theme = ExtResource("1_dns0q")
+theme_override_constants/separation = 2
+script = ExtResource("2_ll8uv")
+
+[node name="Fila" type="HBoxContainer" parent="." unique_id=1036070605]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Nombre" type="Label" parent="Fila" unique_id=1912091498]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_type_variation = &"LabelPeque"
+text = "Lavadora"
+
+[node name="BarraA" type="ProgressBar" parent="Fila" unique_id=1744613261]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 12)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"BarraMadera"
+value = 100.0
+show_percentage = false
+
+[node name="BarraB" type="ProgressBar" parent="Fila" unique_id=998971110]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 12)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"BarraMadera"
+value = 100.0
+show_percentage = false
+
+[node name="Estado" type="Label" parent="Fila" unique_id=1407898769]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_type_variation = &"LabelPeligro"
+
+[node name="BarraReparar" type="ProgressBar" parent="." unique_id=1401604032]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+theme_type_variation = &"BarraVerde"
+max_value = 1.0
+show_percentage = false

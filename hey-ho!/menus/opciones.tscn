@@ -1,0 +1,104 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_n5xn0"]
+[ext_resource type="Script" uid="uid://btj8qppxbckgy" path="res://menus/opciones.gd" id="2_3vdwi"]
+[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_d4gcf"]
+
+[node name="Opciones" type="Control" unique_id=1548697329]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_n5xn0")
+script = ExtResource("2_3vdwi")
+
+[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_d4gcf")]
+layout_mode = 1
+anchors_preset = 15
+
+[node name="Centro" type="CenterContainer" parent="." unique_id=2018348694]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Centro" unique_id=1802367339]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+
+[node name="Columna" type="VBoxContainer" parent="Centro/Panel" unique_id=1636917041]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Titulo" type="Label" parent="Centro/Panel/Columna" unique_id=686829490]
+layout_mode = 2
+theme_type_variation = &"LabelTitulo"
+theme_override_font_sizes/font_size = 48
+text = "OPCIONES"
+horizontal_alignment = 1
+
+[node name="FilaVolumen" type="HBoxContainer" parent="Centro/Panel/Columna" unique_id=1350348520]
+layout_mode = 2
+
+[node name="Etiqueta" type="Label" parent="Centro/Panel/Columna/FilaVolumen" unique_id=1046709170]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+text = "Volumen general"
+
+[node name="SliderVolumen" type="HSlider" parent="Centro/Panel/Columna/FilaVolumen" unique_id=823621622]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="ValorVolumen" type="Label" parent="Centro/Panel/Columna/FilaVolumen" unique_id=1902634830]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "80 %"
+horizontal_alignment = 2
+
+[node name="FilaPantalla" type="HBoxContainer" parent="Centro/Panel/Columna" unique_id=1321097272]
+layout_mode = 2
+
+[node name="Etiqueta" type="Label" parent="Centro/Panel/Columna/FilaPantalla" unique_id=1549012785]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pantalla completa"
+
+[node name="CheckPantalla" type="CheckButton" parent="Centro/Panel/Columna/FilaPantalla" unique_id=1021372379]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="FilaPistas" type="HBoxContainer" parent="Centro/Panel/Columna" unique_id=1345039290]
+layout_mode = 2
+
+[node name="Etiqueta" type="Label" parent="Centro/Panel/Columna/FilaPistas" unique_id=1391541482]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mostrar teclas en pantalla"
+
+[node name="CheckPistas" type="CheckButton" parent="Centro/Panel/Columna/FilaPistas" unique_id=576937834]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Separador" type="HSeparator" parent="Centro/Panel/Columna" unique_id=1984023809]
+layout_mode = 2
+
+[node name="BotonBorrar" type="Button" parent="Centro/Panel/Columna" unique_id=1395482902]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "BORRAR PROGRESO"
+
+[node name="BotonVolver" type="Button" parent="Centro/Panel/Columna" unique_id=1492826025]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"BotonPrimario"
+text = "VOLVER"
