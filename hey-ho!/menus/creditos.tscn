@@ -3,7 +3,7 @@
 [ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_sbdsb"]
 [ext_resource type="Script" uid="uid://cwx11l80ae2xx" path="res://menus/creditos.gd" id="2_5v8vf"]
 [ext_resource type="Texture2D" uid="uid://0tvilt88xxu0" path="res://assets/fondo_hub.png" id="3_dwsbk"]
-[ext_resource type="Texture2D" uid="uid://b0etqj2o4v52c" path="res://assets/11326de6-effe-4fbd-bb97-f6dd82bfee9a-removebg-preview.png" id="4_h0rb3"]
+[ext_resource type="Texture2D" uid="uid://cmo6lqagi5i5x" path="res://assets/logo_rovert_xi.png" id="4_mulwv"]
 
 [node name="Creditos" type="Control" unique_id=235478006]
 layout_mode = 3
@@ -47,7 +47,7 @@ theme_type_variation = &"PanelLogo"
 [node name="Logo" type="TextureRect" parent="Fondo/Centro/Panel/Columna/PanelLogo" unique_id=1652734417]
 custom_minimum_size = Vector2(250, 173)
 layout_mode = 2
-texture = ExtResource("4_h0rb3")
+texture = ExtResource("4_mulwv")
 expand_mode = 1
 stretch_mode = 5
 
