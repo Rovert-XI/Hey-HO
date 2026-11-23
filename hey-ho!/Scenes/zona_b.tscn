@@ -2,11 +2,6 @@
 
 [ext_resource type="Script" uid="uid://sok0udsv5rqf" path="res://ScriptsZonaB/luz_parpadeante.gd" id="1_21en6"]
 [ext_resource type="Script" uid="uid://bybf4rkpaykla" path="res://ScriptsZonaB/disparador.gd" id="2_af74f"]
-[ext_resource type="Script" uid="uid://dhvhe5f7hqtea" path="res://ScriptsZonaC/contorl_jugador.gd" id="3_xykrd"]
-[ext_resource type="Script" uid="uid://cxp4d8dt3gqfb" path="res://ScriptsZonaC/lector_entrada.gd" id="4_ofdnd"]
-[ext_resource type="Script" uid="uid://b5id8v41ev61a" path="res://ScriptsZonaC/orientador.gd" id="5_y58oy"]
-[ext_resource type="Script" uid="uid://da608b1jxgalf" path="res://ScriptsZonaC/motor.gd" id="6_086nr"]
-[ext_resource type="Script" uid="uid://2fcqpyon520o" path="res://ScriptsZonaC/luz_jugador.gd" id="7_3erou"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13qdw"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
@@ -29,11 +24,129 @@ size = Vector3(18, 0.2, 11)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_xrivr"]
 
+[sub_resource type="GDScript" id="GDScript_af74f"]
+script/source = "class_name ControlJugador
+extends CharacterBody3D
+
+@export var velocidad: float = 6.0
+@export var gravedad: float = 9.8
+
+func _physics_process(delta: float) -> void:
+	# 1. Aplicar gravedad si está en el aire
+	if not is_on_floor():
+		velocity.y -= gravedad * delta
+	else:
+		velocity.y = 0.0
+
+	# 2. Leer la entrada del usuario (Teclas A/D o Flechas Izquierda/Derecha)
+	var direccion := 0.0
+	if Input.is_action_pressed(\"ui_right\") or Input.is_key_pressed(KEY_D):
+		direccion += 1.0
+	if Input.is_action_pressed(\"ui_left\") or Input.is_key_pressed(KEY_A):
+		direccion -= 1.0
+
+	# 3. Asignar velocidad horizontal (manteniendo Z en 0 para el plano 2.5D)
+	velocity.x = direccion * velocidad
+	velocity.z = 0.0
+
+	# 4. Mover el personaje respetando colisiones y plataformas
+	move_and_slide()
+"
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toaxk"]
 albedo_color = Color(0.83014524, 0.81369406, 3.85046e-07, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_266tf"]
 material = SubResource("StandardMaterial3D_toaxk")
+
+[sub_resource type="GDScript" id="GDScript_5x3xw"]
+script/source = "class_name LectorEntrada
+extends Node
+## Responsabilidad: convertir las teclas en una dirección de largo 1 (o cero).
+
+
+func leer_direccion() -> Vector3:
+	var der := int(Input.is_key_pressed(KEY_D))
+	var izq := int(Input.is_key_pressed(KEY_A))
+	var atras := int(Input.is_key_pressed(KEY_S))
+	var adelante := int(Input.is_key_pressed(KEY_W))
+	return Vectores.normalizar(Vector3(der - izq, 0, atras - adelante))
+"
+
+[sub_resource type="GDScript" id="GDScript_nm0hh"]
+script/source = "class_name Orientador
+extends Node
+## Responsabilidad: girar el Modelo (no el Jugador) hacia la dirección de movimiento.
+
+@export var modelo: Node3D
+@export var velocidad_giro := 10.0
+
+
+func mirar(direccion: Vector3, dt: float) -> void:
+	# Sin dirección no se toca el ángulo: el modelo se queda mirando hacia donde iba.
+	if direccion == Vector3.ZERO:
+		return
+	modelo.rotation.y = lerp_angle(modelo.rotation.y, angulo_hacia(direccion), velocidad_giro * dt)
+
+
+## En Godot \"adelante\" con ángulo 0 es -Z, y girar en +Y lleva -Z hacia -X:
+## rotar (0, 0, -1) un ángulo θ da (-sen θ, 0, -cos θ), así que θ = atan2(-x, -z). En radianes.
+static func angulo_hacia(d: Vector3) -> float:
+	return atan2(-d.x, -d.z)
+"
+
+[sub_resource type="GDScript" id="GDScript_lxvb7"]
+script/source = "class_name Motor
+extends Node
+## Responsabilidad: la velocidad (aceleración y fricción) y mover al nodo padre.
+
+@export var velocidad_maxima := 5.0   # m/s
+@export var aceleracion := 20.0       # m/s²
+@export var friccion := 30.0          # m/s²
+
+var velocidad := Vector3.ZERO
+
+
+func avanzar(direccion: Vector3, dt: float) -> void:
+	velocidad = siguiente_velocidad(velocidad, direccion, velocidad_maxima, aceleracion, friccion, dt)
+	velocidad.x = 0.0
+	(get_parent() as Node3D).position += velocidad * dt
+
+
+## Función pura: no toca la escena, así que se puede probar con números.
+static func siguiente_velocidad(actual: Vector3, direccion: Vector3, maxima: float,
+		acel: float, fric: float, dt: float) -> Vector3:
+	if direccion != Vector3.ZERO:
+		return Vectores.acercar(actual, direccion * maxima, acel * dt)
+	return Vectores.acercar(actual, Vector3.ZERO, fric * dt)
+"
+
+[sub_resource type="GDScript" id="GDScript_0hbpy"]
+script/source = "class_name LuzJugador
+extends OmniLight3D # o SpotLight3D si es una linterna
+@export var rango := 5.0 # m: hasta dónde alumbra
+@export var altura := 1.2 # m sobre los pies del jugador
+func _ready() -> void:
+	position = Vector3(0.0, altura, 0.0)
+	omni_range = rango # en un SpotLight3D es spot_range
+	omni_attenuation = 2.0 # la que se parece a 1/d²
+	print(\"atenuación: \",atenuacion(1.0), \" \", atenuacion(2.0), \" \", atenuacion(4.0))
+	
+static func atenuacion(d: float, exponente: float = 2.0) -> float:
+	return 1.0 / pow(maxf(d, 0.0001), exponente)
+	
+static func blinn_phong(normal: Vector3, hacia_luz: Vector3,
+	hacia_ojo: Vector3, brillo: float) -> float:
+	# TODO 1: normalizar los tres vectores (Vectores.normalizar)
+	var n = Vectores.normalizar(normal)
+	var l = Vectores.normalizar(hacia_luz)
+	var v = Vectores.normalizar(hacia_ojo)
+	# TODO 2: el vector medio h = normalizar(hacia_luz + hacia_ojo)
+	var h = Vectores.normalizar(l + v)
+	# TODO 3: max(0, n · h) elevado a brillo (pow)
+	var n_dot_h = maxf(0.0, n.dot(h))
+	return pow(n_dot_h, brillo)
+"
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_w00in"]
 
@@ -113,7 +226,7 @@ omni_attenuation = 2.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76599276, 0)
 collision_mask = 3
 motion_mode = 1
-script = ExtResource("3_xykrd")
+script = SubResource("GDScript_af74f")
 
 [node name="Modelo" type="Node3D" parent="Jugador" unique_id=263502837]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.07797241)
@@ -123,19 +236,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.1496253)
 mesh = SubResource("BoxMesh_266tf")
 
 [node name="LectorEntrada" type="Node" parent="Jugador" unique_id=1690760703]
-script = ExtResource("4_ofdnd")
+script = SubResource("GDScript_5x3xw")
 
 [node name="Orientador" type="Node" parent="Jugador" unique_id=859394078 node_paths=PackedStringArray("modelo")]
-script = ExtResource("5_y58oy")
+script = SubResource("GDScript_nm0hh")
 modelo = NodePath("../Modelo")
 
 [node name="Motor" type="Node" parent="Jugador" unique_id=836700799]
-script = ExtResource("6_086nr")
+script = SubResource("GDScript_lxvb7")
 
 [node name="LuzJugador" type="OmniLight3D" parent="Jugador" unique_id=1146657980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.53693, 0)
 light_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
-script = ExtResource("7_3erou")
+script = SubResource("GDScript_0hbpy")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Jugador" unique_id=1145980833]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26805925, -2.0764575)
