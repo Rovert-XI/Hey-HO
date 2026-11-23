@@ -1,20 +1,15 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bqgo2b3j8071b"]
 
 [ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_dbe56"]
 [ext_resource type="Script" uid="uid://tfmf7banhqtq" path="res://juego/tienda.gd" id="2_7mb01"]
-[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_6u84h"]
 
 [node name="Tienda" type="Control" unique_id=689307199]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("1_dbe56")
 script = ExtResource("2_7mb01")
-
-[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_6u84h")]
-layout_mode = 1
-anchors_preset = 15
 
 [node name="Centro" type="CenterContainer" parent="." unique_id=641038985]
 layout_mode = 0
