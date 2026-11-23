@@ -32,7 +32,7 @@ const CREMA := Color("#F6E7B0")
 	Vector3(5, 0.9, 2.9), Vector3(6, 0.9, 2.9), Vector3(7, 0.9, 2.9)]
 ## Punto fuera de la pantalla por donde entra el loro (con cámara ortogonal Size 9 en 16:9 se ve hasta x ≈ 10,5).
 @export var origen_vuelo := Vector3(15.0, 3.5, 3.5)
-@export var modo_prueba := true
+@export var modo_prueba := false
 
 var estado := Estado.INACTIVO
 var edad := {}
@@ -78,6 +78,8 @@ func prenda_tendida(gancho: int) -> void:
 
 func prenda_retirada(gancho: int) -> void:
 	edad.erase(gancho)
+	if edad.is_empty():
+		marca_aviso.visible = false   # NUEVO: ya no hay prendas, se quita la sombra de aviso
 	if en_gancho == gancho and (estado == Estado.ACERCANDO or estado == Estado.POSADO):
 		_huir(false, false)   # la prenda ya no está: se va tranquilo, sin llevarse nada
 

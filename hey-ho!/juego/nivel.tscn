@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://dw46ytcyfm81a"]
+
+[ext_resource type="Script" uid="uid://dogdm1y8kacxw" path="res://juego/nivel_controlador.gd" id="1_ctrl"]
+[ext_resource type="PackedScene" uid="uid://3gwmtsf6ove3" path="res://Scenes/borrador_nivel_1.tscn" id="2_mapa"]
+[ext_resource type="PackedScene" path="res://juego/hud.tscn" id="3_hud"]
+
+[node name="Nivel" type="Node" unique_id=1024532535]
+script = ExtResource("1_ctrl")
+
+[node name="Mapa" parent="." unique_id=69678009 instance=ExtResource("2_mapa")]
+
+[node name="Hud" parent="." unique_id=1062443969 instance=ExtResource("3_hud")]
+unique_name_in_owner = true
