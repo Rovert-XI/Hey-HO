@@ -1,8 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://2wadkdhve16g"]
 
-[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="1_lq583"]
+[ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_lq583"]
 [ext_resource type="Script" uid="uid://blmmlyryg06c5" path="res://juego/final_reparacion.gd" id="2_udpmd"]
-[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="3_bauop"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n245d"]
 content_margin_left = 0.0
@@ -23,15 +22,11 @@ corner_detail = 12
 
 [node name="FinalReparacion" type="Control" unique_id=1748056483]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("1_lq583")
 script = ExtResource("2_udpmd")
-
-[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("3_bauop")]
-layout_mode = 1
-anchors_preset = 15
 
 [node name="Barco" type="Control" parent="." unique_id=475504318]
 unique_name_in_owner = true

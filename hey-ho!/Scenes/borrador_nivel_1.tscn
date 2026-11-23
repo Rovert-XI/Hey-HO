@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c7e0ujjg1btlj" path="res://Scenes/pirata_nivel1.gd" id="1_8lox6"]
 [ext_resource type="Script" uid="uid://baau766y000uf" path="res://ScriptsZonaA/sistema_sol.gd" id="1_gh6xl"]
-[ext_resource type="Script" uid="uid://nhc5ecetoqdj" path="res://scripts/sistema_sol.gd" id="2_wwye2"]
+[ext_resource type="Script" uid="uid://nhc5ecetoqdj" path="res://scripts/ciclo_dia.gd" id="2_wwye2"]
 [ext_resource type="Script" uid="uid://dbr8rbtfmtedi" path="res://sistema_sogas.gd" id="4_6wmma"]
 [ext_resource type="Script" uid="uid://cxhffgiyn2wg0" path="res://loro.gd" id="5_r5xcc"]
 [ext_resource type="Script" uid="uid://kfrry6paltoy" path="res://cielo_atardecer.gd" id="6_wnnrj"]
@@ -99,16 +99,12 @@ radius = 0.3095703
 height = 1.0
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_6wmma"]
-load_path = "res://.godot/imported/pressed.png-8bc8d1afdc761ae57aeec99e225cced6.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_r5xcc"]
-load_path = "res://.godot/imported/hover.png-f0642b09bb48dd6c414e7017bd0ffc13.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wnnrj"]
-load_path = "res://.godot/imported/disabled.png-fe7f3a2e2dbb9e95a2c1a4cade9c18fa.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ckmep"]
-load_path = "res://.godot/imported/focused.png-de769c1eab2622e14f8706a0bc297923.ctex"
 
 [node name="BorradorNivel1" type="Node3D" unique_id=491965911]
 
