@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://crd2qpr8o6wwa"]
+
+[ext_resource type="Script" uid="uid://doyfvniiqq36g" path="res://canasto_clientes.gd" id="1_13rbi"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xrivr"]
+albedo_color = Color(0.14669219, 0.41821432, 0.31014466, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13qdw"]
+albedo_color = Color(0, 0.20152336, 0.14720291, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b1lj4"]
+albedo_color = Color(0.14509805, 0.41960785, 0.30980393, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13qdw"]
+size = Vector3(0.3, 0.1, 0.3)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_xrivr"]
+height = 0.8
+radius = 1.0
+
+[node name="CanastoClientes" type="Area3D" unique_id=381048849]
+script = ExtResource("1_13rbi")
+visual_ropa_path = NodePath("VisualRopa")
+
+[node name="ModeloCanasto" type="CSGCombiner3D" parent="." unique_id=1514916429]
+
+[node name="Exterior" type="CSGCylinder3D" parent="ModeloCanasto" unique_id=2047926310]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.225, 0)
+radius = 0.45
+height = 0.45
+sides = 20
+material = SubResource("StandardMaterial3D_xrivr")
+
+[node name="Hueco" type="CSGCylinder3D" parent="ModeloCanasto" unique_id=1587347263]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26, 0)
+operation = 2
+radius = 0.38
+height = 0.42
+sides = 20
+material = SubResource("StandardMaterial3D_13qdw")
+
+[node name="BordeSuperior" type="CSGTorus3D" parent="ModeloCanasto" unique_id=479388295]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+inner_radius = 0.37
+outer_radius = 0.47
+sides = 20
+ring_sides = 10
+material = SubResource("StandardMaterial3D_b1lj4")
+
+[node name="VisualRopa" type="Node3D" parent="." unique_id=1219639100]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="VisualRopa" unique_id=181920016]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44436705, -0.08975583)
+mesh = SubResource("BoxMesh_13qdw")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="VisualRopa" unique_id=996285991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.1301915)
+mesh = SubResource("BoxMesh_13qdw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1695675541]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("CylinderShape3D_xrivr")
