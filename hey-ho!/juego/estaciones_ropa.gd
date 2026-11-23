@@ -3,8 +3,11 @@ extends Node3D
 ## LAVADORA (izquierda) y TENDEDERO (derecha) del nivel.
 ##
 ## El recorrido de una prenda:
-##   sucia --lanzar a la izquierda--> lavadora (6 s) --jalar con E 1 s--> lavada
+##   sucia --lanzar a la izquierda--> lavadora (6 s) --jalar con E 1 s--> lavada (vuelve a la munición)
 ##   lavada --lanzar a la derecha--> tendedero (15 s) --jalar con E 1 s si ya está seca--> seca --> despacho
+##
+## El ESTADO de cada prenda (sucia/lavada/seca) lo trae la cola de munición de Isabella
+## (PrendaProyectil.EstadoPrenda); el controlador se lo pasa a recibir_en_lavadora / recibir_en_tendedero.
 ##
 ## Si la estación está llena (o la prenda va al sitio equivocado) cae al agua: hay 8 s para
 ## rescatarla con F mantenida 2 s; si no, se pierde.
@@ -18,10 +21,10 @@ signal prenda_lavada(slot: int)            # terminó el lavado (destello verde)
 signal prenda_tendida(gancho: int)         # entró al tendedero (aquí arranca el reloj del loro)
 signal prenda_seca(gancho: int)            # ya se puede sacar del tendedero
 signal prenda_retirada(gancho: int)        # el jugador la sacó del tendedero (o se la robaron)
-signal prenda_al_agua(estado: String)      # cayó al agua: "sucia" o "lavada"
-signal prenda_rescatada(estado: String)
-signal prenda_perdida(estado: String)      # pasaron los 8 s sin rescatarla
-signal mano_cambio(sucias: int, lavadas: int, secas: int)   # cambió lo que lleva el pirata
+signal prenda_al_agua(estado: int)         # cayó al agua (estado: 0 sucia, 1 lavada, 2 seca)
+signal prenda_rescatada(estado: int)
+signal prenda_perdida(estado: int)         # pasaron los 8 s sin rescatarla
+signal mano_cambio(secas: int)             # cambió cuántas prendas secas lleva el pirata para el despacho
 
 # ---------------------------------------------------------------- Números del juego (del documento de concepto)
 const CAPACIDAD_LAVADORA := 2
@@ -38,18 +41,22 @@ const COLOR_MOJADA := Color(0.18, 0.2, 0.3)
 const COLOR_SECA := Color("F2E6C8")
 const COLOR_LISTO := Color("6FCF6F")
 
+# Estados de la prenda: son los mismos números del enum PrendaProyectil.EstadoPrenda de Isabella.
+const SUCIA := 0
+const LAVADA := 1
+const SECA := 2
+
 # ---------------------------------------------------------------- Dónde se dibujan (se pueden mover en el Inspector)
-@export var pos_lavadora: Array[Vector3] = [Vector3(0, 0.9, -2.9), Vector3(1, 0.9, -2.9)]
+# Las lavadoras del mapa de Isabella están en x = 2.06 y x = 3.98 (z = -2.9); los ganchos en x = 5, 6, 7 (z = 2.9).
+@export var pos_lavadora: Array[Vector3] = [Vector3(2.06, 0.75, -2.9), Vector3(3.98, 0.75, -2.9)]
 @export var pos_ganchos: Array[Vector3] = [Vector3(5, 0.35, 2.9), Vector3(6, 0.35, 2.9), Vector3(7, 0.35, 2.9)]
-@export var pos_agua_lavadora := Vector3(0.5, -0.9, -1.9)
+@export var pos_agua_lavadora := Vector3(3.0, -0.9, -1.9)
 @export var pos_agua_tendedero := Vector3(6.0, -0.9, 3.9)
 ## Para demos: 2.0 = lavar y secar al doble de rápido (no cambia los tiempos de rescate ni de jalar).
 @export var velocidad_proceso := 1.0
 
 # ---------------------------------------------------------------- Estado
-## Prendas que lleva el pirata en las manos.
-var sucias := 0
-var lavadas := 0
+## Prendas secas que lleva el pirata hacia el despacho (las sucias y lavadas viajan en la cola de munición).
 var secas := 0
 
 var lavadora: Array = [null, null]           # cada espacio: null (libre) o {t, listo, nodo, barra}
@@ -107,24 +114,11 @@ func avanzar(delta: float) -> void:
 
 
 # ---------------------------------------------------------------- Reparto de prendas
-## Un cliente nuevo trae prendas sucias: las suma a lo que lleva el pirata.
-func dar_prendas_sucias(n: int) -> void:
-	sucias += n
-	_avisar_mano()
-
-
-## Tiro a la IZQUIERDA. Devuelve true si la lavadora la aceptó; si está llena, cae al agua.
-func recibir_en_lavadora() -> bool:
-	var estado := "sucia"
-	if sucias > 0:
-		sucias -= 1
-	elif lavadas > 0:
-		lavadas -= 1                          # relanzó una ya lavada: se vuelve a lavar
-	else:
-		return false                          # no tenía nada que lanzar
-	_avisar_mano()
+## Tiro a la IZQUIERDA con una prenda en `estado`. Devuelve true si la lavadora la aceptó.
+## Solo se lava lo que no está seco; si la lavadora está llena (o la prenda ya está seca) cae al agua.
+func recibir_en_lavadora(estado: int = SUCIA) -> bool:
 	var libre := lavadora.find(null)          # primer espacio libre, o -1 si está llena
-	if libre == -1:
+	if libre == -1 or estado == SECA:
 		_al_agua(estado, pos_agua_lavadora)
 		return false
 	lavadora[libre] = _nueva(libre, pos_lavadora, COLOR_SUCIA)
@@ -132,19 +126,11 @@ func recibir_en_lavadora() -> bool:
 	return true
 
 
-## Tiro a la DERECHA. Solo se tienden prendas lavadas: una sucia, o con el tendedero lleno, cae al agua.
-func recibir_en_tendedero() -> bool:
-	var estado := "lavada"
-	if lavadas > 0:
-		lavadas -= 1
-	elif sucias > 0:
-		sucias -= 1
-		estado = "sucia"                      # tiró una sucia: no se puede tender
-	else:
-		return false
-	_avisar_mano()
+## Tiro a la DERECHA con una prenda en `estado`. Solo se tienden prendas LAVADAS:
+## una sucia, una ya seca, o con el tendedero lleno, cae al agua.
+func recibir_en_tendedero(estado: int = LAVADA) -> bool:
 	var libre := tendedero.find(null)
-	if estado == "sucia" or libre == -1:
+	if estado != LAVADA or libre == -1:
 		_al_agua(estado, pos_agua_tendedero)
 		return false
 	tendedero[libre] = _nueva(libre, pos_ganchos, COLOR_MOJADA)
@@ -176,8 +162,7 @@ func jalar(sitio: String, delta: float) -> bool:
 		for i in CAPACIDAD_LAVADORA:
 			if lavadora[i] != null and lavadora[i].listo:
 				_liberar(lavadora, i)
-				lavadas += 1
-				break
+				break                         # el controlador agrega la prenda LAVADA a la munición
 	else:
 		for g in GANCHOS:
 			if tendedero[g] != null and tendedero[g].seca:
@@ -207,13 +192,8 @@ func rescatar(delta: float) -> bool:
 	progreso_rescate = 0.0
 	_rescate_hecho = true
 	var c = charcos[0]                       # la que lleva más tiempo (la que se pierde primero)
-	if c.estado == "sucia":
-		sucias += 1
-	else:
-		lavadas += 1
 	_quitar_charco(c)
-	_avisar_mano()
-	prenda_rescatada.emit(c.estado)
+	prenda_rescatada.emit(c.estado)         # el controlador la devuelve a la munición con su estado
 	return true
 
 
@@ -250,8 +230,6 @@ func reiniciar() -> void:
 			_liberar(tendedero, g)
 	for c in charcos.duplicate():
 		_quitar_charco(c)
-	sucias = 0
-	lavadas = 0
 	secas = 0
 	soltar_jalar()
 	soltar_rescate()
@@ -269,7 +247,7 @@ func en_tendedero() -> int:
 
 # ---------------------------------------------------------------- Interno: dibujo y limpieza
 func _avisar_mano() -> void:
-	mano_cambio.emit(sucias, lavadas, secas)
+	mano_cambio.emit(secas)
 
 
 ## Crea la prenda (una caja plana de color) en su espacio y devuelve sus datos.
@@ -296,7 +274,7 @@ func _liberar(lista: Array, i: int) -> void:
 
 
 ## Pone una prenda en el agua: dibuja un anillo amarillo que se encoge durante 8 s.
-func _al_agua(estado: String, pos: Vector3) -> void:
+func _al_agua(estado: int, pos: Vector3) -> void:
 	var m := MeshInstance3D.new()
 	var d := CylinderMesh.new()
 	d.top_radius = 0.6
