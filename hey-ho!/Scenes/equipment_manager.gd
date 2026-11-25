@@ -6,17 +6,19 @@ signal disparo_soltado(velocidad: Vector3, tipo_item: TipoItem)
 enum TipoItem {
 	NINGUNO,
 	RESORTERA,
-	PRENDA,
-	ROCA
+	ROCA,
+	CANA_PESCAR,
+	PRENDA # Solo se usa como tipo de proyectil al disparar la resortera
 }
 
 @export_group("Referencias de Escena")
 @export var escena_resortera_3d: PackedScene
+@export var escena_cana_pescar_3d: PackedScene
 @export var punto_mano_path: NodePath
 @export var trayectoria_path: NodePath
 @export var municion_manager_path: NodePath
 
-@export_group("Dinamica Tipo Angry Birds")
+@export_group("Dinamica Resortera")
 @export var distancia_max_arrastre := 110.0
 @export var velocidad_horizontal_min := 2.5
 @export var velocidad_horizontal_max := 13.5
@@ -24,8 +26,12 @@ enum TipoItem {
 @export var impulso_vertical_max := 6.8
 @export var modo_resortera_inverso := true
 
+@export_group("Dinamica Cana de Pescar")
+@export var alcance_maximo_cana := 14.0
+
 var item_actual: TipoItem = TipoItem.NINGUNO
 var instancia_resortera: Node3D = null
+var instancia_cana: CanaPescar = null
 var esta_tensando: bool = false
 
 var _inicio_arrastre: Vector2 = Vector2.ZERO
@@ -41,12 +47,11 @@ func _ready() -> void:
 	seleccionar_item(0)
 
 
-# Actualiza la trayectoria cada frame mientras tensas para que acompañe al jugador si camina.
 func _process(_delta: float) -> void:
 	if not esta_tensando:
 		return
 
-	if not _puede_disparar_item_actual():
+	if item_actual != TipoItem.RESORTERA or not _puede_usar_resortera():
 		_cancelar_tension()
 		return
 
@@ -57,11 +62,11 @@ func _input(event: InputEvent) -> void:
 	if not esta_tensando:
 		return
 
-	if not _puede_disparar_item_actual():
+	if item_actual != TipoItem.RESORTERA or not _puede_usar_resortera():
 		_cancelar_tension()
 		return
 
-	_procesar_entrada_resortera(event)
+	_procesar_entrada_apuntado(event)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -71,11 +76,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if esta_tensando:
 		return
 
-	if not _puede_disparar_item_actual():
-		return
+	if event is InputEventMouseButton and event.pressed:
+		# Lógica directa por clic para la caña de pescar (Slot 3).
+		if item_actual == TipoItem.CANA_PESCAR and instancia_cana != null:
+			if instancia_cana.linea_lanzada:
+				if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
+					instancia_cana.stop_fishing()
+			elif event.button_index == MOUSE_BUTTON_LEFT:
+				_intentar_lanzar_cana_al_cursor(event.position)
+			return
 
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_iniciar_tension(get_viewport().get_mouse_position())
+		# Lógica de tensado para la resortera (Slot 1).
+		if event.button_index == MOUSE_BUTTON_LEFT and item_actual == TipoItem.RESORTERA and _puede_usar_resortera():
+			_iniciar_tension(get_viewport().get_mouse_position())
 
 
 func seleccionar_item(indice_slot: int) -> void:
@@ -84,14 +97,65 @@ func seleccionar_item(indice_slot: int) -> void:
 	_actualizar_modelo_en_mano()
 
 
-func _puede_disparar_item_actual() -> bool:
-	if item_actual != TipoItem.RESORTERA:
-		return false
-
+func _puede_usar_resortera() -> bool:
 	if _municion != null:
 		return _municion.tiene_prendas()
-
 	return true
+
+
+func _intentar_lanzar_cana_al_cursor(posicion_pantalla: Vector2) -> void:
+	var camara: Camera3D = get_viewport().get_camera_3d()
+	if camara == null or _punto_mano == null or instancia_cana == null:
+		return
+
+	var origen_rayo: Vector3 = camara.project_ray_origin(posicion_pantalla)
+	var direccion_rayo: Vector3 = camara.project_ray_normal(posicion_pantalla)
+	var destino_rayo: Vector3 = origen_rayo + direccion_rayo * 1000.0
+
+	var query := PhysicsRayQueryParameters3D.create(origen_rayo, destino_rayo)
+	query.collide_with_bodies = true
+	query.collide_with_areas = true
+	query.exclude = _obtener_rids_ignorados()
+
+	var resultado: Dictionary = camara.get_world_3d().direct_space_state.intersect_ray(query)
+	var punto_impacto: Vector3
+	var objeto_tocado: Object = null
+
+	if not resultado.is_empty():
+		punto_impacto = resultado["position"]
+		objeto_tocado = resultado["collider"]
+	else:
+		# Si se hace clic sobre el agua o una zona sin colisión, proyecta sobre el plano del jugador.
+		var plano_nivel := Plane(Vector3.UP, _punto_mano.global_position.y)
+		var interseccion: Variant = plano_nivel.intersects_ray(origen_rayo, direccion_rayo)
+		if interseccion == null:
+			return
+		punto_impacto = interseccion as Vector3
+
+	var vector_hacia_objetivo: Vector3 = punto_impacto - _punto_mano.global_position
+	if vector_hacia_objetivo.length() > alcance_maximo_cana:
+		vector_hacia_objetivo = vector_hacia_objetivo.limit_length(alcance_maximo_cana)
+		punto_impacto = _punto_mano.global_position + vector_hacia_objetivo
+
+	var direccion_plana := Vector3(vector_hacia_objetivo.x, 0.0, vector_hacia_objetivo.z)
+	if direccion_plana.length_squared() > 0.0001:
+		_rotar_mano_hacia(direccion_plana.normalized())
+
+	instancia_cana.lanzar_hacia_punto(punto_impacto, objeto_tocado)
+
+
+func _obtener_rids_ignorados() -> Array[RID]:
+	var rids: Array[RID] = []
+	for nodo in get_tree().get_nodes_in_group("ignorar_trayectoria"):
+		if nodo is CollisionObject3D:
+			rids.append((nodo as CollisionObject3D).get_rid())
+
+	var padre: Node = get_parent()
+	if padre != null:
+		for hijo in padre.find_children("*", "CollisionObject3D", true, false):
+			rids.append((hijo as CollisionObject3D).get_rid())
+
+	return rids
 
 
 func _procesar_cambio_slot_por_teclado(event: InputEvent) -> bool:
@@ -112,7 +176,7 @@ func _procesar_cambio_slot_por_teclado(event: InputEvent) -> bool:
 			return false
 
 
-func _procesar_entrada_resortera(event: InputEvent) -> void:
+func _procesar_entrada_apuntado(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 			_soltar_y_disparar()
@@ -145,7 +209,10 @@ func _soltar_y_disparar() -> void:
 	var velocidad_final: Vector3 = _velocidad_tiro
 	_cancelar_tension()
 
-	if velocidad_final.length_squared() > 0.01 and (_municion == null or _municion.tiene_prendas()):
+	if velocidad_final.length_squared() <= 0.01:
+		return
+
+	if item_actual == TipoItem.RESORTERA and _puede_usar_resortera():
 		disparo_soltado.emit(velocidad_final, TipoItem.PRENDA)
 
 
@@ -176,7 +243,7 @@ func _calcular_velocidad_360(jalon: Vector2, limite: float) -> Vector3:
 		return Vector3.ZERO
 
 	direccion_horizontal = direccion_horizontal.normalized()
-	_rotar_jugador_hacia(direccion_horizontal)
+	_rotar_mano_hacia(direccion_horizontal)
 
 	var rapidez_horizontal: float = lerpf(velocidad_horizontal_min, velocidad_horizontal_max, potencia)
 	var rapidez_vertical: float = lerpf(impulso_vertical_min, impulso_vertical_max, potencia)
@@ -200,16 +267,16 @@ func _obtener_ejes_horizontales_camara() -> Array[Vector3]:
 	return [forward, right]
 
 
-func _rotar_jugador_hacia(direccion_horizontal: Vector3) -> void:
+func _rotar_mano_hacia(direccion_horizontal: Vector3) -> void:
 	if _punto_mano == null:
 		return
 
-	# Coloca PuntoMano a la izquierda o derecha del jugador sin invertir la escala 3D de Pirata.
 	if absf(direccion_horizontal.x) > 0.05:
-		var distancia_mano: float = maxf(absf(_punto_mano.position.x), 0.6)
+		var distancia_mano: float = absf(_punto_mano.position.x)
+		if distancia_mano < 0.01:
+			distancia_mano = 0.35
 		_punto_mano.position.x = distancia_mano * signf(direccion_horizontal.x)
 
-	# Orienta solo PuntoMano (la resortera) hacia donde apuntas sin rotar CharacterBody3D.
 	var objetivo: Vector3 = _punto_mano.global_position + direccion_horizontal
 	if not _punto_mano.global_position.is_equal_approx(objetivo):
 		_punto_mano.look_at(objetivo, Vector3.UP)
@@ -228,9 +295,9 @@ func _convertir_slot_a_item(indice_slot: int) -> TipoItem:
 		1:
 			return TipoItem.RESORTERA
 		2:
-			return TipoItem.PRENDA
-		3:
 			return TipoItem.ROCA
+		3:
+			return TipoItem.CANA_PESCAR
 		_:
 			return TipoItem.NINGUNO
 
@@ -240,6 +307,25 @@ func _actualizar_modelo_en_mano() -> void:
 		instancia_resortera.queue_free()
 		instancia_resortera = null
 
-	if item_actual == TipoItem.RESORTERA and escena_resortera_3d != null and _punto_mano != null:
+	if is_instance_valid(instancia_cana):
+		instancia_cana.queue_free()
+		instancia_cana = null
+
+	if _punto_mano == null:
+		return
+
+	if item_actual == TipoItem.RESORTERA and escena_resortera_3d != null:
 		instancia_resortera = escena_resortera_3d.instantiate()
 		_punto_mano.add_child(instancia_resortera)
+		_registrar_en_grupo_ignorar(instancia_resortera)
+
+	elif item_actual == TipoItem.CANA_PESCAR and escena_cana_pescar_3d != null:
+		instancia_cana = escena_cana_pescar_3d.instantiate() as CanaPescar
+		_punto_mano.add_child(instancia_cana)
+		_registrar_en_grupo_ignorar(instancia_cana)
+
+
+func _registrar_en_grupo_ignorar(raiz: Node) -> void:
+	raiz.add_to_group("ignorar_trayectoria")
+	for hijo in raiz.find_children("*", "CollisionObject3D", true, false):
+		hijo.add_to_group("ignorar_trayectoria")
