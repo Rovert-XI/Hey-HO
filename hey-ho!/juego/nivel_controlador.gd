@@ -10,10 +10,12 @@ extends Node
 ##
 ## CONTROLES REALES (no hay teclas de prueba):
 ##   A / D ........ caminar (script del pirata)          P ... tomar prenda del canasto (Isabella)
-##   1 / 2 / 3 .... equipar items (Isabella)              clic . apuntar y soltar la resortera
-##   C ............ dejar la prenda en la lavadora o el tendedero (hay que estar en su zona)
-##   E (mantener) . sacar de la lavadora / tendedero (1 s) o entregar el pedido en el despacho
-##   F (mantener) . la CAÑA: rescata una prenda del agua (2 s, cerca de la lavadora o del tendedero)
+##   1 ............ resortera: apuntar con clic sostenido y soltar. La prenda llega a la lavadora
+##                  (tiro a la izquierda) o al tendedero (a la derecha). Es la ÚNICA forma de que la ropa llegue.
+##   3 ............ caña (la de Isabella): clic para lanzar la boya, otro clic para recogerla.
+##                  Con la boya sobre la lavadora o el tendedero recoge la prenda lista (1 s);
+##                  con la boya en el agua rescata una prenda caída (2 s). Hay que estar en la zona.
+##   E ............ entregar el pedido en el despacho (con prendas secas en la mano)
 ##   R (mantener) . reparar la soga de la zona donde estás parado
 ##
 ## Lo que viene de otros compañeros entra por los métodos PÚBLICOS de la sección "API pública":
@@ -44,8 +46,8 @@ const COLOR_ZONA := {
 	"lavadora": Color(0.35, 0.7, 1.0), "tendedero": Color(0.5, 0.9, 0.5), "despacho": Color(1.0, 0.8, 0.3)}
 const TITULO_ZONA := {"lavadora": "LAVADORA", "tendedero": "TENDEDERO", "despacho": "DESPACHO"}
 const AYUDA_ZONA := {
-	"lavadora": "C: dejar prenda sucia\nE: sacar lavada",
-	"tendedero": "C: dejar prenda lavada\nE: sacar seca",
+	"lavadora": "1 resortera: lanzar prenda sucia\n3 caña: recoger lavada",
+	"tendedero": "1 resortera: lanzar prenda lavada\n3 caña: recoger seca",
 	"despacho": "E: entregar pedido"}
 
 # ---------------------------------------------------------------- Piezas del nivel
@@ -53,10 +55,11 @@ const AYUDA_ZONA := {
 @onready var sistema_sol: SistemaSol = $Mapa/SistemaSol
 @onready var sogas: SistemaSogas = $Mapa/SistemaSogas
 @onready var loro: Loro = $Mapa/Loro
-## Piezas de la resortera de Isabella (si el mapa las trae). Si no existen, quedan en null.
+## Piezas de la resortera y la caña de Isabella (si el mapa las trae). Si no existen, quedan en null.
 @onready var _equipo: Node = get_node_or_null("Mapa/EquipmentManager")
 @onready var _municion: Node = get_node_or_null("Mapa/MunicionManager")
-@onready var _punto_mano: Node3D = get_node_or_null("Mapa/PlayerPirata/CharacterBody3D/PuntoMano")
+## La mano del pirata se busca por nombre, así no importa cómo se llame el CharacterBody3D de Isabella.
+@onready var _punto_mano: Node3D = _buscar_mano()
 
 # ---------------------------------------------------------------- Estado del nivel
 var estaciones: EstacionesRopa
@@ -73,11 +76,11 @@ var _terminado := false
 var _ultima_velocidad := Vector3.ZERO     # velocidad del último disparo (para saber dónde cae)
 var _prendas_antes := -1
 var _frente_antes := -1                    # estado de la prenda que iba primera en la cola de munición
-var _dejando := false                      # true mientras se deja una prenda a mano (no cuenta como tiro)
-var _e_antes := false                      # E / F / R estaban pulsadas en el fotograma anterior (para avisar una vez)
-var _f_antes := false
+var _entrega_hecha := false                # ya se entregó con esta pulsación de E (hay que soltar E para entregar otra)
+var _e_antes := false                      # E estaba pulsada / la boya estaba lanzada en el fotograma anterior
+var _boya_antes := false
 var _r_antes := false
-var _cana_en_hud := false                  # la caña está marcada en la barra de herramientas del HUD
+var _item_hud := -1                        # herramienta que el HUD de Kevin tiene marcada (para no repetir)
 var _zonas := {}                           # nombre -> {"mat": material del marcador, "texto": Label3D}
 var _ultimo_aviso := ""
 var _t_aviso := 0.0
@@ -113,20 +116,30 @@ func _ready() -> void:
 	_hasta_proximo = 0.0                  # el primer cliente llega de inmediato
 
 
-## Cada fotograma: baja el reloj, avanza los pedidos, lee E/F/R, resalta la zona y revisa si el nivel terminó.
+## Cada fotograma: baja el reloj, avanza los pedidos, lee E/caña/R, resalta la zona y revisa si el nivel terminó.
 func _process(delta: float) -> void:
 	if _terminado:
 		return
 	_tiempo -= delta
 	hud.set_tiempo(_tiempo)
 	_avanzar_pedidos(delta)
-	_leer_teclas_estaciones(delta)
+	_leer_entrega()
+	_leer_cana(delta)
 	_actualizar_zonas()
 	_leer_reparacion(delta)
+	_sincronizar_hud()
 	if _tiempo <= 0.0:
 		terminar(false)
 	elif _creados >= int(_datos.clientes) and _pedidos.is_empty():
 		terminar(false)                   # ya pasaron todos los clientes
+
+
+## Busca la mano del pirata (nodo "PuntoMano") dentro de PlayerPirata, con el nombre que tenga su cuerpo.
+func _buscar_mano() -> Node3D:
+	var pirata := get_node_or_null("Mapa/PlayerPirata")
+	if pirata == null:
+		return null
+	return pirata.find_child("PuntoMano", true, false) as Node3D
 
 
 # ---------------------------------------------------------------- Resortera de Isabella
@@ -150,13 +163,12 @@ func _estado_siguiente() -> int:
 
 
 ## Si la cantidad de prendas bajó, es que se disparó una: la que iba primera en la cola.
-## Si la bajó dejar_prenda() (a mano), no es un tiro y no se cuenta aquí.
 func _on_prendas_cambiaron(cantidad: int) -> void:
 	var gasto := cantidad < _prendas_antes
 	_prendas_antes = cantidad
 	var disparada := _frente_antes            # estado de la prenda que salió
 	_frente_antes = _estado_siguiente()       # y la nueva primera de la cola
-	if gasto and not _dejando:
+	if gasto:
 		_contar_tiro.call_deferred(disparada)  # deja que EquipmentManager termine de avisar el tiro
 
 
@@ -185,50 +197,6 @@ func lanzar(lado: String, x := NAN, estado := -1) -> void:
 		estaciones.recibir_en_lavadora(estado if estado >= 0 else EstacionesRopa.SUCIA)
 	else:
 		estaciones.recibir_en_tendedero(estado if estado >= 0 else EstacionesRopa.LAVADA)
-
-
-## Deja a mano una prenda (tecla C). Hay que estar en la zona de la lavadora (se deja una prenda SUCIA)
-## o del tendedero (una LAVADA). La busca en toda la cola: no importa en qué orden las recogiste.
-## Si no hay de ese tipo, o la estación está llena, avisa y no se gasta nada.
-func dejar_prenda() -> void:
-	if _terminado:
-		return
-	var sitio := _sitio_cercano()
-	if sitio != "lavadora" and sitio != "tendedero":
-		_avisar("Camina hasta la lavadora o el tendedero para dejar la prenda")
-		return
-	if _municion == null or not _municion.tiene_prendas():
-		_avisar("No llevas ninguna prenda")
-		return
-	var estado := EstacionesRopa.SUCIA if sitio == "lavadora" else EstacionesRopa.LAVADA
-	if sitio == "lavadora" and estaciones.en_lavadora() >= EstacionesRopa.CAPACIDAD_LAVADORA:
-		_avisar("La lavadora está llena")
-		return
-	if sitio == "tendedero" and estaciones.en_tendedero() >= EstacionesRopa.GANCHOS:
-		_avisar("El tendedero está lleno")
-		return
-	if not _traer_al_frente(estado):
-		_avisar("No llevas ninguna prenda %s" % ("sucia" if estado == EstacionesRopa.SUCIA else "lavada"))
-		return
-	_dejando = true                           # que no cuente como un tiro de resortera
-	_municion.consumir_siguiente_prenda()
-	_dejando = false
-	lanzar("izquierda" if sitio == "lavadora" else "derecha", X_LAVADORA if sitio == "lavadora" else X_TENDEDERO, estado)
-
-
-## Pone al frente de la cola la primera prenda con ese estado: las que están delante se pasan al final
-## (la cola solo se puede sacar por delante). Devuelve false si no hay ninguna de ese estado.
-func _traer_al_frente(estado: int) -> bool:
-	var encontrada := false
-	_dejando = true
-	for i in int(_municion.cantidad_prendas):
-		if _estado_siguiente() == estado:
-			encontrada = true
-			break
-		var e: int = _municion.consumir_siguiente_prenda()   # la de adelante pasa al final de la cola
-		_municion.agregar_prendas(1, e)
-	_dejando = false
-	return encontrada
 
 
 ## Paga un pedido. Con `prendas` (entrega real): 2 prendas pagan +30 oro y 1 prenda paga +10.
@@ -327,9 +295,9 @@ func _crear_estaciones() -> void:
 	estaciones.prenda_retirada.connect(func(g: int) -> void: loro.prenda_retirada(g))
 	loro.prenda_robada.connect(_on_prenda_robada)
 	# Avisos del HUD en cada evento importante.
-	estaciones.prenda_lavada.connect(func(_i: int) -> void: hud.mostrar_aviso("¡Prenda lavada! Jálala con E", "exito"))
-	estaciones.prenda_seca.connect(func(_g: int) -> void: hud.mostrar_aviso("Prenda seca: sácala del tendedero", "exito"))
-	estaciones.prenda_al_agua.connect(func(_e: int) -> void: hud.mostrar_aviso("¡Cayó al agua! Mantén F para rescatarla", "peligro"))
+	estaciones.prenda_lavada.connect(func(_i: int) -> void: hud.mostrar_aviso("¡Prenda lavada! Recógela con la caña (3)", "exito"))
+	estaciones.prenda_seca.connect(func(_g: int) -> void: hud.mostrar_aviso("Prenda seca: recógela con la caña (3)", "exito"))
+	estaciones.prenda_al_agua.connect(func(_e: int) -> void: hud.mostrar_aviso("¡Cayó al agua! Lanza la caña al agua para rescatarla", "peligro"))
 	estaciones.prenda_perdida.connect(func(_e: int) -> void: hud.mostrar_aviso("Se perdió una prenda", "peligro"))
 	estaciones.prenda_rescatada.connect(func(e: int) -> void: _municion_mas(1, e))   # vuelve con su estado
 
@@ -347,17 +315,8 @@ func _municion_mas(n: int, estado := 0) -> void:
 
 
 # ---------------------------------------------------------------- Zonas (dónde está parado el pirata)
-## En qué zona está la mano del pirata ("lavadora", "tendedero", "despacho") o "" si en ninguna.
-## (Si el mapa no trae jugador, devuelve la estación que sirva ahora, para poder probar el nivel solo.)
-func _sitio_cercano() -> String:
-	if _punto_mano == null:
-		if estaciones.secas > 0:
-			return "despacho"
-		for s in ["lavadora", "tendedero"]:
-			if estaciones.hay_para_jalar(s):
-				return s
-		return ""
-	var x := _punto_mano.global_position.x
+## Zona ("lavadora", "tendedero", "despacho") que contiene esa x, o "" si ninguna.
+func _zona_en_x(x: float) -> String:
 	var mejor := ""
 	var d_mejor := alcance_x
 	for nombre: String in ZONAS:
@@ -368,11 +327,28 @@ func _sitio_cercano() -> String:
 	return mejor
 
 
+## En qué zona está la mano del pirata o "" si en ninguna.
+## (Si el mapa no trae jugador, devuelve la estación que sirva ahora, para poder probar el nivel solo.)
+func _sitio_cercano() -> String:
+	if _punto_mano == null:
+		if estaciones.secas > 0:
+			return "despacho"
+		for s in ["lavadora", "tendedero"]:
+			if estaciones.hay_para_jalar(s):
+				return s
+		return ""
+	return _zona_en_x(_punto_mano.global_position.x)
+
+
+## ¿Esa x está sobre el agua de la lavadora o del tendedero?
+func _x_en_agua(x: float) -> bool:
+	return absf(x - X_AGUA_LAVADORA) <= alcance_x or absf(x - X_AGUA_TENDEDERO) <= alcance_x
+
+
 func _cerca_del_agua() -> bool:
 	if _punto_mano == null:
 		return true
-	var x := _punto_mano.global_position.x
-	return absf(x - X_AGUA_LAVADORA) <= alcance_x or absf(x - X_AGUA_TENDEDERO) <= alcance_x
+	return _x_en_agua(_punto_mano.global_position.x)
 
 
 ## Dibuja en el piso un rectángulo de color por zona y un rótulo encima (el rótulo muestra la ayuda al entrar).
@@ -427,48 +403,73 @@ func _avisar(texto: String, tipo := "info") -> void:
 	hud.mostrar_aviso(texto, tipo)
 
 
-# ---------------------------------------------------------------- Teclas reales: E y F
-## E mantenida: recoge de la lavadora / tendedero (1 s) o entrega en el despacho (un toque).
-## F mantenida: rescata del agua (2 s). Al soltar la tecla se reinicia el progreso.
-## Solo funcionan dentro de la zona correspondiente.
-func _leer_teclas_estaciones(delta: float) -> void:
+# ---------------------------------------------------------------- Entrega (E) y caña (3)
+## E: entrega el pedido (un toque) cuando el pirata está en la zona DESPACHO.
+func _leer_entrega() -> void:
 	var e := Input.is_key_pressed(KEY_E)
 	if e:
-		var sitio := _sitio_cercano()
-		if sitio == "despacho":
-			if not estaciones._jalar_hecho:
+		if _sitio_cercano() == "despacho":
+			if not _entrega_hecha:
 				if entregar_en_despacho():
-					estaciones._jalar_hecho = true
+					_entrega_hecha = true
 				elif not _e_antes:
 					_avisar("Para entregar necesitas un pedido y una prenda seca en la mano")
-		elif sitio != "":
-			if estaciones.jalar(sitio, delta) and sitio == "lavadora":
-				_municion_mas(1, EstacionesRopa.LAVADA)   # la prenda lavada vuelve a la munición para tenderla
-			elif not _e_antes and not estaciones.hay_para_jalar(sitio):
-				_avisar("Todavía no hay prendas listas aquí")
-		else:
-			estaciones.progreso_jalar = 0.0
-			if not _e_antes:
-				_avisar("Camina hasta la lavadora, el tendedero o el despacho")
+		elif not _e_antes:
+			_avisar("E sirve en el despacho para entregar el pedido")
 	else:
-		estaciones.soltar_jalar()
+		_entrega_hecha = false
 	_e_antes = e
 
-	var f := Input.is_key_pressed(KEY_F)
-	if f and _cerca_del_agua():
+
+## La caña de Isabella (CanaPescar) si está equipada (tecla 3) o null.
+func _cana_equipada() -> CanaPescar:
+	if _equipo == null:
+		return null
+	var c: Variant = _equipo.get("instancia_cana")
+	return c as CanaPescar if is_instance_valid(c) else null
+
+
+## La caña, con la boya lanzada. Mientras la boya esté sobre una estación se va llenando la barra:
+##   - boya en el agua con una prenda caída: la rescata (2 s). Va primero porque se pierde a los 8 s.
+##   - boya sobre la lavadora o el tendedero con una prenda lista: la recoge (1 s).
+## Siempre con el pirata parado en esa zona. Al recoger la boya (otro clic) se reinicia el progreso.
+func _leer_cana(delta: float) -> void:
+	var cana := _cana_equipada()
+	var lanzada := cana != null and cana.linea_lanzada
+	var x_boya := cana.bobber.global_position.x if lanzada else 0.0
+	var sitio := _sitio_cercano()
+	var zona_boya := _zona_en_x(x_boya) if lanzada else ""
+	var en_agua := lanzada and _cerca_del_agua() and _x_en_agua(x_boya) and not estaciones.charcos.is_empty()
+	var en_estacion := lanzada and (sitio == "lavadora" or sitio == "tendedero") \
+		and zona_boya == sitio and estaciones.hay_para_jalar(sitio)
+	if en_agua:
+		estaciones.soltar_jalar()
 		estaciones.rescatar(delta)
-		if not _f_antes and estaciones.charcos.is_empty():
-			_avisar("No hay prendas en el agua")
-	else:
+	elif en_estacion:
 		estaciones.soltar_rescate()
-		if f and not _f_antes:
-			_avisar("Camina hasta el agua de la lavadora o del tendedero")
-	_f_antes = f
-	# La barra de herramientas de Kevin marca la caña mientras se rescata, y vuelve a la resortera al soltar.
-	var usando_cana := f and _cerca_del_agua() and not estaciones.charcos.is_empty()
-	if usando_cana != _cana_en_hud:
-		_cana_en_hud = usando_cana
-		hud.equipar("cana" if usando_cana else "resortera")
+		if estaciones.jalar(sitio, delta) and sitio == "lavadora":
+			_municion_mas(1, EstacionesRopa.LAVADA)   # la prenda lavada vuelve a la munición para lanzarla al tendedero
+	else:
+		estaciones.soltar_jalar()
+		estaciones.soltar_rescate()
+		# Un aviso cuando acaba de caer la boya y no pasó nada (la boya tarda unos instantes en llegar).
+		if lanzada and not _boya_antes:
+			_avisar("Pon la boya sobre la lavadora, el tendedero o el agua, estando en esa zona")
+	_boya_antes = lanzada
+
+
+## La barra de herramientas de Kevin marca la herramienta que Isabella tiene equipada (1, 2 o 3).
+func _sincronizar_hud() -> void:
+	if _equipo == null:
+		return
+	var item := int(_equipo.get("item_actual"))
+	if item == _item_hud:
+		return
+	_item_hud = item
+	match item:
+		1: hud.equipar("resortera")
+		2: hud.equipar("piedra")
+		3: hud.equipar("cana")
 
 
 # ---------------------------------------------------------------- Sogas
@@ -500,21 +501,12 @@ func _on_reparacion_cobrada(costo: int) -> void:
 	hud.set_oro(_oro)
 
 
-# ---------------------------------------------------------------- Tecla C
-func _unhandled_key_input(event: InputEvent) -> void:
-	var k := event as InputEventKey
-	if k == null or not k.pressed or k.echo:
-		return
-	if k.keycode == KEY_C:
-		dejar_prenda()
-
-
 ## Línea fija con los controles del nivel (abajo a la izquierda).
 func _mostrar_controles() -> void:
 	var capa := CanvasLayer.new()
 	capa.layer = 5
 	var l := Label.new()
-	l.text = "A/D mover · P canasto · C dejar prenda · E sacar/entregar · F rescatar · R reparar"
+	l.text = "A/D mover · P canasto · 1 resortera (arrastrar y soltar) · 3 caña (clic) · E entregar · R reparar"
 	l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 16)
 	l.add_theme_font_size_override("font_size", 13)
 	capa.add_child(l)
