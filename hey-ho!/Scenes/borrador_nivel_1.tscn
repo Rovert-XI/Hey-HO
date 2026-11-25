@@ -142,7 +142,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.05, 2.9)
 mesh = SubResource("BoxMesh_t6u4c")
 
 [node name="Barco" type="MeshInstance3D" parent="Decorado" unique_id=202702795]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, -0.15, 1.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3905692, -0.15, 1.4)
 mesh = SubResource("BoxMesh_i66cl")
 
 [node name="Sol" type="DirectionalLight3D" parent="." unique_id=767636178]
@@ -171,21 +171,21 @@ entorno = NodePath("../WorldEnvironment")
 
 [node name="PlayerPirata" type="Node3D" parent="." unique_id=1029083601]
 
-[node name="CharacterBody3D" type="CharacterBody3D" parent="PlayerPirata" unique_id=394385394]
+[node name="CharacterBody3D2" type="CharacterBody3D" parent="PlayerPirata" unique_id=803699823]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 0)
 script = ExtResource("1_8lox6")
 
-[node name="Pirata" type="MeshInstance3D" parent="PlayerPirata/CharacterBody3D" unique_id=397719774]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 0)
+[node name="Pirata" type="MeshInstance3D" parent="PlayerPirata/CharacterBody3D2" unique_id=397719774]
 mesh = SubResource("CapsuleMesh_q6bmp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerPirata/CharacterBody3D" unique_id=777148591]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9962678, 0.50227135, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerPirata/CharacterBody3D2" unique_id=777148591]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0037322044, 0.0022713542, 0)
 shape = SubResource("CapsuleShape3D_xrivr")
 
-[node name="PuntoMano" type="Node3D" parent="PlayerPirata/CharacterBody3D" unique_id=759668694]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6921475, 0, 0)
+[node name="PuntoMano" type="Node3D" parent="PlayerPirata/CharacterBody3D2" unique_id=759668694]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3176577, -0.21595377, 0)
 
-[node name="TrayectoriaResortera" type="Node3D" parent="PlayerPirata/CharacterBody3D/PuntoMano" unique_id=886904180]
+[node name="TrayectoriaResortera" type="Node3D" parent="PlayerPirata/CharacterBody3D2/PuntoMano" unique_id=886904180]
 script = ExtResource("7_vym6w")
 
 [node name="BarraInventario" type="Node3D" parent="." unique_id=608391529]
@@ -242,8 +242,8 @@ stretch_mode = 0
 [node name="EquipmentManager" type="Node" parent="." unique_id=217688207]
 script = ExtResource("7_wwye2")
 escena_resortera_3d = ExtResource("8_p2u03")
-punto_mano_path = NodePath("../PlayerPirata/CharacterBody3D/PuntoMano")
-trayectoria_path = NodePath("../PlayerPirata/CharacterBody3D/PuntoMano/TrayectoriaResortera")
+punto_mano_path = NodePath("../PlayerPirata/CharacterBody3D2/PuntoMano")
+trayectoria_path = NodePath("../PlayerPirata/CharacterBody3D2/PuntoMano/TrayectoriaResortera")
 municion_manager_path = NodePath("../MunicionManager")
 
 [node name="MunicionManager" type="Node" parent="." unique_id=1676619381]
