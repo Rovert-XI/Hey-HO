@@ -15,8 +15,7 @@ albedo_color = Color(0.14509805, 0.41960785, 0.30980393, 1)
 size = Vector3(0.3, 0.1, 0.3)
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_xrivr"]
-height = 0.8
-radius = 1.0
+height = 0.5396484
 
 [node name="CanastoClientes" type="Area3D" unique_id=381048849]
 script = ExtResource("1_13rbi")
@@ -58,5 +57,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.1301915)
 mesh = SubResource("BoxMesh_13qdw")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1695675541]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2698242, 0)
 shape = SubResource("CylinderShape3D_xrivr")

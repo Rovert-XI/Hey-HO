@@ -6,7 +6,6 @@
 [ext_resource type="Script" uid="uid://dbr8rbtfmtedi" path="res://sistema_sogas.gd" id="4_6wmma"]
 [ext_resource type="Script" uid="uid://cxhffgiyn2wg0" path="res://loro.gd" id="5_r5xcc"]
 [ext_resource type="Script" uid="uid://kfrry6paltoy" path="res://cielo_atardecer.gd" id="6_wnnrj"]
-[ext_resource type="Texture2D" uid="uid://efgd4bpn3obg" path="res://Assets/Cuadros_Inventario/BttnCamisa/normal.png" id="7_gh6xl"]
 [ext_resource type="Texture2D" uid="uid://dl0sopwxj0j5n" path="res://Assets/Cuadros_Inventario/BttnResortera/normal.png" id="7_satd5"]
 [ext_resource type="Script" uid="uid://ipj55x2e2jld" path="res://Scenes/trayectoria.gd" id="7_vym6w"]
 [ext_resource type="Script" uid="uid://c76h5yqqdv63k" path="res://Scenes/equipment_manager.gd" id="7_wwye2"]
@@ -15,11 +14,22 @@
 [ext_resource type="Texture2D" uid="uid://uw7jgq28fo34" path="res://Assets/Cuadros_Inventario/BttnResortera/hover.png" id="9_satd5"]
 [ext_resource type="Texture2D" uid="uid://dfamo4a4ktf07" path="res://Assets/Cuadros_Inventario/BttnResortera/disabled.png" id="10_t6u4c"]
 [ext_resource type="Texture2D" uid="uid://epuh67n36xgg" path="res://Assets/Cuadros_Inventario/BttnResortera/focused.png" id="11_i66cl"]
+[ext_resource type="Texture2D" uid="uid://bx6u2tluttwhb" path="res://Assets/Cuadros_Inventario/BttnPiedra/normal.png" id="13_vajee"]
+[ext_resource type="Texture2D" uid="uid://cai0fpvdlq2ri" path="res://Assets/Cuadros_Inventario/BttnPiedra/pressed.png" id="14_lyd35"]
+[ext_resource type="Texture2D" uid="uid://cd2li2ndmfr0r" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/normal.png" id="14_n0hbx"]
+[ext_resource type="Texture2D" uid="uid://cl0scddbcyc53" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/pressed.png" id="15_aica6"]
+[ext_resource type="Texture2D" uid="uid://h4cmamudhlys" path="res://Assets/Cuadros_Inventario/BttnPiedra/hover.png" id="15_opdkc"]
 [ext_resource type="Script" uid="uid://dgxnkqcht0rec" path="res://Scenes/municion_manager.gd" id="16_6l15b"]
+[ext_resource type="Texture2D" uid="uid://d173qw6ukk0vl" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/hover.png" id="16_hwnhy"]
+[ext_resource type="Texture2D" uid="uid://yqwpeaxcx5dp" path="res://Assets/Cuadros_Inventario/BttnPiedra/disabled.png" id="16_pyv4c"]
 [ext_resource type="PackedScene" uid="uid://dw76i27ua8uma" path="res://Scenes/prenda_recolectable.tscn" id="17_i66cl"]
+[ext_resource type="Texture2D" uid="uid://umndusf6ljhk" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/disabled.png" id="17_ktdqb"]
+[ext_resource type="Texture2D" uid="uid://crjpuavbvhc0m" path="res://Assets/Cuadros_Inventario/BttnPiedra/focused.png" id="17_yosrx"]
 [ext_resource type="Script" uid="uid://wogiy2030y7" path="res://Scenes/lanzador_prenda.gd" id="18_q6bmp"]
+[ext_resource type="Texture2D" uid="uid://cpea26vy17jrj" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/focused.png" id="18_vajee"]
 [ext_resource type="PackedScene" uid="uid://yvbhs74efvve" path="res://Scenes/prenda_proyectil.tscn" id="19_q6bmp"]
 [ext_resource type="PackedScene" uid="uid://crd2qpr8o6wwa" path="res://Scenes/canasto_clientes.tscn" id="20_y7ef4"]
+[ext_resource type="PackedScene" uid="uid://b8cfe6dl1osm7" path="res://Scenes/caña_pescar.tscn" id="25_lyd35"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x4l8m"]
 albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
@@ -53,14 +63,6 @@ height = 1.0
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xrivr"]
 radius = 0.3095703
 height = 1.0
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_6wmma"]
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_r5xcc"]
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wnnrj"]
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ckmep"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vql5j"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
@@ -220,28 +222,29 @@ stretch_mode = 0
 [node name="PiedraBttn" type="TextureButton" parent="BarraInventario/InventarioHotbar/HBoxContainer" unique_id=280666776]
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
-texture_normal = ExtResource("7_gh6xl")
-texture_pressed = SubResource("CompressedTexture2D_6wmma")
-texture_hover = SubResource("CompressedTexture2D_r5xcc")
-texture_disabled = SubResource("CompressedTexture2D_wnnrj")
-texture_focused = SubResource("CompressedTexture2D_ckmep")
+texture_normal = ExtResource("13_vajee")
+texture_pressed = ExtResource("14_lyd35")
+texture_hover = ExtResource("15_opdkc")
+texture_disabled = ExtResource("16_pyv4c")
+texture_focused = ExtResource("17_yosrx")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="PrendaRopaBttn" type="TextureButton" parent="BarraInventario/InventarioHotbar/HBoxContainer" unique_id=1558759501]
+[node name="CanaPescarBttn" type="TextureButton" parent="BarraInventario/InventarioHotbar/HBoxContainer" unique_id=1558759501]
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
-texture_normal = ExtResource("7_gh6xl")
-texture_pressed = SubResource("CompressedTexture2D_6wmma")
-texture_hover = SubResource("CompressedTexture2D_r5xcc")
-texture_disabled = SubResource("CompressedTexture2D_wnnrj")
-texture_focused = SubResource("CompressedTexture2D_ckmep")
+texture_normal = ExtResource("14_n0hbx")
+texture_pressed = ExtResource("15_aica6")
+texture_hover = ExtResource("16_hwnhy")
+texture_disabled = ExtResource("17_ktdqb")
+texture_focused = ExtResource("18_vajee")
 ignore_texture_size = true
 stretch_mode = 0
 
 [node name="EquipmentManager" type="Node" parent="." unique_id=217688207]
 script = ExtResource("7_wwye2")
 escena_resortera_3d = ExtResource("8_p2u03")
+escena_cana_pescar_3d = ExtResource("25_lyd35")
 punto_mano_path = NodePath("../PlayerPirata/CharacterBody3D2/PuntoMano")
 trayectoria_path = NodePath("../PlayerPirata/CharacterBody3D2/PuntoMano/TrayectoriaResortera")
 municion_manager_path = NodePath("../MunicionManager")
@@ -310,5 +313,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88381636, -0.059416294, 0.
 municion_manager_path = NodePath("../../MunicionManager")
 
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/ResorteraBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
-[connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/PiedraBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
-[connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/PrendaRopaBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
+[connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/PiedraBttn" to="EquipmentManager" method="seleccionar_item" binds= [2]]
+[connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/CanaPescarBttn" to="EquipmentManager" method="seleccionar_item" binds= [3]]
