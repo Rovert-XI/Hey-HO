@@ -2,6 +2,9 @@
 
 [ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="2_h8aq7"]
 [ext_resource type="Script" uid="uid://d1df3nus1n8lr" path="res://juego/hud.gd" id="3_compacto"]
+[ext_resource type="Texture2D" uid="uid://dl0sopwxj0j5n" path="res://Assets/Cuadros_Inventario/BttnResortera/normal.png" id="4_resortera"]
+[ext_resource type="Texture2D" uid="uid://bx6u2tluttwhb" path="res://Assets/Cuadros_Inventario/BttnPiedra/normal.png" id="5_piedra"]
+[ext_resource type="Texture2D" uid="uid://cd2li2ndmfr0r" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/normal.png" id="6_cana"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 8.0
@@ -72,6 +75,7 @@ corner_detail = 12
 [node name="Hud" type="CanvasLayer" unique_id=273287611]
 process_mode = 3
 layer = 10
+script = ExtResource("3_compacto")
 
 [node name="Raiz" type="Control" parent="." unique_id=466960527]
 unique_name_in_owner = true
@@ -83,7 +87,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("2_h8aq7")
-script = ExtResource("3_compacto")
 
 [node name="Superior" type="MarginContainer" parent="Raiz" unique_id=72101563]
 layout_mode = 0
@@ -259,6 +262,7 @@ mouse_filter = 2
 theme_override_constants/separation = 4
 
 [node name="Inferior" type="MarginContainer" parent="Raiz" unique_id=1887638492]
+unique_name_in_owner = true
 layout_mode = 0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -342,6 +346,14 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
+[node name="IconoResortera" type="TextureRect" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotResortera/ColumnaResortera" unique_id=194738115]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_resortera")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="NombreResortera" type="Label" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotResortera/ColumnaResortera" unique_id=350776220]
 layout_mode = 2
 theme_type_variation = &"LabelPeque"
@@ -353,7 +365,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_type_variation = &"LabelTecla"
 theme_override_font_sizes/font_size = 14
-text = "CLIC"
+text = "1"
 horizontal_alignment = 1
 
 [node name="ExtraResortera" type="Label" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotResortera/ColumnaResortera" unique_id=330156635]
@@ -376,6 +388,14 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
+[node name="IconoPiedra" type="TextureRect" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotPiedra/ColumnaPiedra" unique_id=194738116]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_piedra")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="NombrePiedra" type="Label" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotPiedra/ColumnaPiedra" unique_id=1949905188]
 layout_mode = 2
 theme_type_variation = &"LabelPeque"
@@ -387,7 +407,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_type_variation = &"LabelTecla"
 theme_override_font_sizes/font_size = 14
-text = "Q"
+text = "2"
 horizontal_alignment = 1
 
 [node name="ExtraPiedra" type="Label" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotPiedra/ColumnaPiedra" unique_id=1552847679]
@@ -411,6 +431,14 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
+[node name="IconoCana" type="TextureRect" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotCana/ColumnaCana" unique_id=194738117]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("6_cana")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="NombreCana" type="Label" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotCana/ColumnaCana" unique_id=319913438]
 layout_mode = 2
 theme_type_variation = &"LabelPeque"
@@ -422,14 +450,14 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_type_variation = &"LabelTecla"
 theme_override_font_sizes/font_size = 14
-text = "F"
+text = "3"
 horizontal_alignment = 1
 
 [node name="ExtraCana" type="Label" parent="Raiz/Inferior/ColumnaInferior/CentroInventario/PanelInventario/FilaInventario/SlotCana/ColumnaCana" unique_id=794060369]
 layout_mode = 2
 theme_type_variation = &"LabelPeque"
 theme_override_font_sizes/font_size = 9
-text = "mantén 2 s"
+text = "clic: lanzar / recoger"
 horizontal_alignment = 1
 
 [node name="PistaPausa" type="Label" parent="Raiz" unique_id=1402991685]
