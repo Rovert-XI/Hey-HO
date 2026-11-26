@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://yvbhs74efvve"]
 
 [ext_resource type="Script" uid="uid://bnglkvyvnaa0y" path="res://Scenes/prenda_proyectil.gd" id="1_it5b4"]
+[ext_resource type="PackedScene" uid="uid://dw76i27ua8uma" path="res://Scenes/prenda_recolectable.tscn" id="2_1djkr"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_xrivr"]
 size = Vector3(0.5, 0.3, 0.5)
@@ -10,6 +11,7 @@ size = Vector3(0.5, 0.3, 0.5)
 
 [node name="PrendaProyectil" type="RigidBody3D" unique_id=1518095379]
 script = ExtResource("1_it5b4")
+escena_prenda_recolectable = ExtResource("2_1djkr")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=665178771]
 mesh = SubResource("BoxMesh_xrivr")

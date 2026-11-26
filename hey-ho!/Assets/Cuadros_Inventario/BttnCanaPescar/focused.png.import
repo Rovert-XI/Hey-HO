@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://23w2anq3ir7c"
-path="res://.godot/imported/Dude_Monster.png-6a80865f2a6823e78b7398ea21102eb3.ctex"
+uid="uid://cpea26vy17jrj"
+path="res://.godot/imported/focused.png-48b1a0dd13a8591e5ba15fec4a3f0741.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Dude_Monster/Dude_Monster.png"
-dest_files=["res://.godot/imported/Dude_Monster.png-6a80865f2a6823e78b7398ea21102eb3.ctex"]
+source_file="res://Assets/Cuadros_Inventario/BttnCanaPescar/focused.png"
+dest_files=["res://.godot/imported/focused.png-48b1a0dd13a8591e5ba15fec4a3f0741.ctex"]
 
 [params]
 

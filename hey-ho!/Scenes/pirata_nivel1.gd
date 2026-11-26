@@ -7,6 +7,12 @@ extends CharacterBody3D
 
 @onready var visual_mesh: Node3D = $Pirata
 
+
+func _ready() -> void:
+	if visual_mesh != null:
+		visual_mesh.scale.x = absf(visual_mesh.scale.x)
+
+
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravedad * delta
@@ -26,8 +32,5 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = dir * velocidad
 		velocity.z = 0.0
-
-	if visual_mesh and dir != 0.0:
-		visual_mesh.scale.x = abs(visual_mesh.scale.x) * sign(dir)
 
 	move_and_slide()

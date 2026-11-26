@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://0kmfxexrtgsl"]
+
+[ext_resource type="Script" uid="uid://dcm3juom6ao61" path="res://scripts/boya.gd" id="1_la1ie"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4sc2o"]
+albedo_color = Color(0.8784314, 0.17254902, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_xrivr"]
+material = SubResource("StandardMaterial3D_4sc2o")
+radius = 0.05
+height = 0.1
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_xrivr"]
+custom_solver_bias = 0.1
+margin = 0.1
+radius = 0.06
+
+[node name="Boya" type="CharacterBody3D" unique_id=344070262]
+script = ExtResource("1_la1ie")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1988183351]
+mesh = SubResource("SphereMesh_xrivr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=700730598]
+shape = SubResource("SphereShape3D_xrivr")

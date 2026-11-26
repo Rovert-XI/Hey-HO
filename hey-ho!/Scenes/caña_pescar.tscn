@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://b8cfe6dl1osm7"]
+
+[ext_resource type="Script" uid="uid://fonr1c5q4hrm" path="res://scripts/caña_pescar.gd" id="1_588w1"]
+[ext_resource type="PackedScene" uid="uid://cxwlcfjyo5yl1" path="res://Assets/Caña_Pescar/fishing_rod.glb" id="1_lfuo5"]
+[ext_resource type="PackedScene" uid="uid://0kmfxexrtgsl" path="res://Scenes/boya.tscn" id="3_4sc2o"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_xrivr"]
+resource_local_to_scene = true
+top_radius = 0.003
+bottom_radius = 0.003
+
+[node name="CañaPescar" type="Node3D" unique_id=1363529650]
+transform = Transform3D(-0.99999994, 0, -8.742277e-08, 0, 1, 0, 8.742277e-08, 0, -0.99999994, 0, 0, 0)
+script = ExtResource("1_588w1")
+
+[node name="fishing_rod" parent="." unique_id=1517897380 instance=ExtResource("1_lfuo5")]
+
+[node name="Boya" parent="." unique_id=344070262 instance=ExtResource("3_4sc2o")]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40351713, 1.350696, -2.5622547e-05)
+
+[node name="Punta" type="Marker3D" parent="." unique_id=1222060716]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30725327, 1.4350388, -2.5622547e-05)
+
+[node name="InicioBoya" type="Marker3D" parent="." unique_id=1665951104]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40351713, 1.350696, -2.5622547e-05)
+
+[node name="LineaPesca" type="MeshInstance3D" parent="." unique_id=412591844]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30836356, 0.4452489, 0)
+mesh = SubResource("CylinderMesh_xrivr")

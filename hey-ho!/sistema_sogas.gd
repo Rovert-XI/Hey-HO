@@ -32,7 +32,7 @@ const SOGAS := {
 @export var desgaste_por_pedido := 4.0
 ## Multiplica todo el desgaste. Útil para DEMOSTRAR la mecánica sin jugar el nivel entero (por ejemplo 10).
 @export var multiplicador_desgaste := 1.0
-@export var modo_prueba := true
+@export var modo_prueba := false
 
 var sogas := {
 	"lavadora": [RES_MAX, RES_MAX],
