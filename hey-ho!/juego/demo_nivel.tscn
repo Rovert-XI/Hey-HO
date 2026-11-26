@@ -1,14 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cl5snbk0v5x1x"]
 
 [ext_resource type="Script" uid="uid://bg6eujbgbacyf" path="res://juego/demo_nivel.gd" id="1_msagb"]
-[ext_resource type="PackedScene" path="res://componentes/fondo_marino.tscn" id="2_iuxn0"]
 [ext_resource type="PackedScene" path="res://juego/hud.tscn" id="3_wn7of"]
-[ext_resource type="Theme" path="res://tema/heyho_tema.tres" id="4_qd3r3"]
+[ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="4_qd3r3"]
 
 [node name="DemoNivel" type="Node" unique_id=2073604653]
 script = ExtResource("1_msagb")
 
-[node name="FondoMarino" parent="." unique_id=499471115 instance=ExtResource("2_iuxn0")]
+[node name="FondoMarino" parent="." unique_id=499471115]
 anchors_preset = 15
 
 [node name="Hud" parent="." unique_id=273287611 instance=ExtResource("3_wn7of")]
@@ -22,10 +21,11 @@ custom_minimum_size = Vector2(300, 0)
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = -76.0
-offset_right = 316.0
-offset_bottom = -14.0
+offset_left = 17.0
+offset_top = -107.0
+offset_right = 317.0
+offset_bottom = -47.0
+grow_vertical = 0
 theme = ExtResource("4_qd3r3")
 theme_type_variation = &"LabelPeque"
 theme_override_font_sizes/font_size = 13
