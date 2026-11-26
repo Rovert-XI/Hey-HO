@@ -15,7 +15,7 @@ extends Node3D
 ##   La plataforma CENTRAL (donde camina el pirata) queda en medio y cada plataforma cuelga de ella con 2 sogas:
 ##     LAVADORA (arriba)    -> 2 sogas en el hueco entre la lavadora y la central
 ##     TENDEDERO (abajo)    -> 2 sogas en el hueco entre la central y el tendedero
-##     DESPACHO (izquierda) -> 2 sogas en el hueco entre el despacho y la central
+##     DESPACHO (izquierda) -> 2 sogas EN DIAGONAL entre el despacho y la central
 
 signal soga_cambio(plataforma: String, indice: int, resistencia: float)
 signal plataforma_desestabilizada(plataforma: String, desestabilizada: bool)
@@ -41,19 +41,24 @@ const ROJO_OSCURO := Color("#4A0D0D")    # fase oscura del parpadeo
 const ALCANCE_REPARACION := 1.0
 
 # Por plataforma y para cada una de sus 2 sogas:
-#   pos   = centro de la soga EN COORDENADAS DEL MUNDO (el hueco entre la plataforma y la central)
-#   size  = tamaño de la soga (el largo es lo que mide el hueco)
+#   ext   = los dos extremos de cada soga EN COORDENADAS DEL MUNDO [desde, hasta]: del borde de la plataforma al
+#           borde de la central. La soga se dibuja como una barra entre esos dos puntos (recta o en diagonal).
 #   x     = en qué x del mundo hay que estar parado para repararla
 #   ancla = valor (x del tiro; z en el despacho) con el que se elige qué soga se desgasta
+# Lavadora y tendedero: sogas rectas. Despacho: dos sogas en diagonal (en "V" abierta hacia el despacho) que
+# convergen en el borde izquierdo de la plataforma central, como en el esquema del equipo.
 const SOGAS := {
 	"lavadora": {
-		"pos": [Vector3(2.0, 0.07, -0.935), Vector3(5.6, 0.07, -0.935)], "size": Vector3(0.14, 0.14, 2.13),
+		"ext": [[Vector3(2.0, 0.07, -2.0), Vector3(2.0, 0.07, 0.13)],
+				[Vector3(5.6, 0.07, -2.0), Vector3(5.6, 0.07, 0.13)]],
 		"x": [2.0, 5.6], "ancla": [2.0, 3.2]},
 	"tendedero": {
-		"pos": [Vector3(3.2, 0.07, 2.667), Vector3(6.7, 0.07, 2.667)], "size": Vector3(0.14, 0.14, 2.07),
+		"ext": [[Vector3(3.2, 0.07, 1.63), Vector3(3.2, 0.07, 3.70)],
+				[Vector3(6.7, 0.07, 1.63), Vector3(6.7, 0.07, 3.70)]],
 		"x": [3.2, 6.7], "ancla": [5.0, 7.0]},
 	"despacho": {
-		"pos": [Vector3(0.72, 0.07, 0.4), Vector3(0.72, 0.07, 1.35)], "size": Vector3(1.48, 0.14, 0.14),
+		"ext": [[Vector3(-0.02, 0.07, -0.6), Vector3(1.46, 0.07, 0.48)],
+				[Vector3(-0.02, 0.07, 3.17), Vector3(1.46, 0.07, 1.39)]],
 		"x": [0.72, 0.72], "ancla": [0.4, 1.35]},
 }
 
@@ -188,6 +193,7 @@ func reparar(p: String, delta: float, indice := -1) -> bool:
 	reparacion_progreso.emit(p, clampf(progreso[p] / T_REPARAR, 0.0, 1.0))
 	if progreso[p] >= T_REPARAR:
 		progreso[p] = 0.0
+		reparacion_progreso.emit(p, 0.0)     # reparación terminada: se apaga el indicador de la soga
 		var estaba_rota: bool = rotas[p][i]
 		rotas[p][i] = false
 		tiempo_rotura[p][i] = -1.0           # deja de estar crítica: se reinicia la cuenta de los 30 s
@@ -305,17 +311,19 @@ func _crear_visuales() -> void:
 	# Las posiciones de SOGAS están en coordenadas del mundo: se pasan a locales de este nodo.
 	var origen := global_position if is_inside_tree() else position
 	for p: String in SOGAS.keys():
-		var posiciones: Array = SOGAS[p]["pos"]
-		var tam: Vector3 = SOGAS[p]["size"]
+		var extremos: Array = SOGAS[p]["ext"]
 		for i in 2:
+			var desde: Vector3 = extremos[i][0]
+			var hasta: Vector3 = extremos[i][1]
 			var m := MeshInstance3D.new()
 			var caja := BoxMesh.new()
-			caja.size = tam
+			caja.size = Vector3(desde.distance_to(hasta), 0.14, 0.14)   # barra a lo largo de la soga
 			m.mesh = caja
 			var mat := StandardMaterial3D.new()
 			mat.emission_energy_multiplier = 0.9
 			m.material_override = mat
-			m.position = (posiciones[i] as Vector3) - origen
+			m.position = (desde + hasta) * 0.5 - origen
+			m.rotation.y = -atan2(hasta.z - desde.z, hasta.x - desde.x)   # la gira hacia la dirección de la soga
 			add_child(m)
 			visuales[p + str(i)] = m
 			_pintar(p, i)
