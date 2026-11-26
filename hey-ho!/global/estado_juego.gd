@@ -9,7 +9,7 @@ extends RefCounted
 ##  - Reforzar una soga cuesta 20 oro, suma 25 (máximo 100) y solo se ofrece si está bajo 75.
 
 ## >>> CAMBIAR por la escena real del nivel cuando el equipo la tenga.
-const RUTA_NIVEL := "res://Scenes/borrador_nivel_1.tscn"
+const RUTA_NIVEL := "res://juego/nivel.tscn"
 const RUTA_GUARDADO := "user://hey_ho.cfg"
 ## false = el progreso (niveles, oro, sogas) NO se guarda en disco: cada vez que se abre
 ## el juego empieza desde el nivel 1. Los ajustes (volumen, pantalla, pistas) sí se conservan.

@@ -8,6 +8,7 @@
 script = ExtResource("1_ctrl")
 
 [node name="Mapa" parent="." unique_id=69678009 instance=ExtResource("2_mapa")]
+process_mode = 1
 
 [node name="Hud" parent="." unique_id=1062443969 instance=ExtResource("3_hud")]
 unique_name_in_owner = true
