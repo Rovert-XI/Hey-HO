@@ -5,6 +5,11 @@ const ESCENA_FILA_SOGA: PackedScene = preload("res://componentes/fila_soga.tscn"
 const ESCENA_BARRA_PACIENCIA: PackedScene = preload("res://componentes/barra_paciencia.tscn")
 const CARGA_MAX := 1.0
 
+signal pausa_solicitada
+
+@export var mostrar_lista_pedidos := true
+@export var mostrar_boton_pausa := false
+
 const PLATAFORMAS := {
 	"lavadora": "Lavadora",
 	"tendedero": "Tendedero",
@@ -24,8 +29,9 @@ const PLATAFORMAS := {
 @onready var _dia: Label = %Dia
 @onready var _barra_reparacion: ProgressBar = %BarraReparacion
 @onready var _texto_reparacion: Label = %TextoReparacion
+@onready var _barcos: Label = %Barcos
+@onready var _boton_pausa: Button = %BotonPausa
 @onready var _panel_carga: PanelContainer = $Raiz/Inferior/ColumnaInferior/ContenedorCarga/PanelCarga
-@onready var _lista_sogas: VBoxContainer = %ListaSogas
 @onready var _lista_pedidos: VBoxContainer = %ListaPedidos
 @onready var _franja: ColorRect = %Franja
 @onready var _relleno: ColorRect = %Relleno
@@ -57,6 +63,9 @@ func _ready() -> void:
 	_franja.visible = false
 	set_piedras(3)
 	_actualizar_pistas()
+	_boton_pausa.pressed.connect(func() -> void: pausa_solicitada.emit())
+	_boton_pausa.visible = mostrar_boton_pausa
+	
 
 
 func _input(event: InputEvent) -> void:
@@ -79,17 +88,14 @@ func _process(delta: float) -> void:
 func iniciar_nivel(numero: int) -> void:
 	var datos := EstadoJuego.datos_nivel(numero)
 	_dia.text = "Día %d" % numero
-	_oro_actual = 0
-	_oro_minimo = int(datos.minimo)
-	_oro_maximo = maxi(int(datos.oro_max), 1)
-	_barra_oro.max_value = _oro_maximo
+	_configurar_oro(int(datos.oro_max), int(datos.minimo))
+	_barra_reparacion.show()
+	_texto_reparacion.show()
 	_barra_reparacion.max_value = EstadoJuego.COSTO_REPARACION
 	_barra_reparacion.value = EstadoJuego.oro_total
 	_texto_reparacion.text = "Barco %d / %d" % [EstadoJuego.oro_total, EstadoJuego.COSTO_REPARACION]
-	_texto_minimo.text = "Mínimo %d oro" % _oro_minimo
-	var fraccion_minima := clampf(float(_oro_minimo) / float(_oro_maximo), 0.0, 1.0)
-	_marca_minimo.anchor_left = fraccion_minima
-	_marca_minimo.anchor_right = fraccion_minima
+	_barcos.hide()
+	set_barcos(0, int(datos.clientes))
 	set_oro(0)
 	set_tiempo(float(datos.duracion))
 	equipar("resortera")
@@ -97,6 +103,17 @@ func iniciar_nivel(numero: int) -> void:
 	set_carga(0.0)
 	_actualizar_pistas()
 	_asegurar_filas_sogas()
+
+
+func configurar_jornada(duracion: float, total_barcos: int, oro_maximo: int, oro_minimo: int) -> void:
+	_dia.text = "Día 1"
+	_configurar_oro(oro_maximo, oro_minimo)
+	_barra_reparacion.hide()
+	_texto_reparacion.hide()
+	_barcos.show()
+	set_barcos(0, total_barcos)
+	set_oro(0)
+	set_tiempo(duracion)
 
 
 func conectar_sogas(sistema: SistemaSogas) -> void:
@@ -130,8 +147,12 @@ func set_tiempo(segundos: float) -> void:
 
 func set_oro(cantidad: int) -> void:
 	_oro_actual = maxi(cantidad, 0)
-	_oro.text = str(_oro_actual)
+	_oro.text = "Oro: %d / %d" % [_oro_actual, _oro_maximo]
 	_barra_oro.value = _oro_actual
+
+
+func set_barcos(atendidos: int, total: int) -> void:
+	_barcos.text = "Barcos: %d / %d" % [atendidos, total]
 
 
 func set_piedras(cantidad: int) -> void:
@@ -192,6 +213,8 @@ func equipar(item: String) -> void:
 
 func agregar_pedido(id: int, titulo: String, paciencia: float, prendas: int) -> void:
 	if _pedidos.has(id):
+		return
+	if not mostrar_lista_pedidos:
 		return
 	var barra := ESCENA_BARRA_PACIENCIA.instantiate() as BarraPaciencia
 	_lista_pedidos.add_child(barra)
@@ -261,9 +284,18 @@ func _asegurar_filas_sogas() -> void:
 		return
 	for plataforma: String in PLATAFORMAS:
 		var fila := ESCENA_FILA_SOGA.instantiate() as FilaSoga
-		_lista_sogas.add_child(fila)
 		fila.configurar(plataforma, PLATAFORMAS[plataforma])
 		_filas_sogas[plataforma] = fila
+
+
+func _configurar_oro(maximo: int, minimo: int) -> void:
+	_oro_maximo = maxi(maximo, 1)
+	_oro_minimo = maxi(minimo, 0)
+	_barra_oro.max_value = _oro_maximo
+	_texto_minimo.text = "Meta: %d oro" % _oro_minimo
+	var fraccion_minima := clampf(float(_oro_minimo) / float(_oro_maximo), 0.0, 1.0)
+	_marca_minimo.anchor_left = fraccion_minima
+	_marca_minimo.anchor_right = fraccion_minima
 
 
 func _al_cambiar_soga(plataforma: String, indice: int, resistencia: float) -> void:

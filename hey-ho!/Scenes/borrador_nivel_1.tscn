@@ -36,6 +36,7 @@
 [ext_resource type="Script" uid="uid://dbvkwqy75b1nd" path="res://juego/estaciones_ropa.gd" id="33_yosrx"]
 [ext_resource type="Script" uid="uid://sfkcmcrug8d6" path="res://scripts/controlador_estaciones.gd" id="34_7hd74"]
 [ext_resource type="Script" uid="uid://ch0pkvi4xbpst" path="res://gestor_nivel_1.gd" id="36_g7br1"]
+[ext_resource type="PackedScene" uid="uid://csokgdxygbx4t" path="res://juego/hud.tscn" id="37_hud"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x4l8m"]
 albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
@@ -401,6 +402,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9048228, 0, 0.8196981)
 
 [node name="MuelleBarco3" type="Marker3D" parent="." unique_id=496462841]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7910085, 0, 2.7217588)
+
+[node name="Hud" parent="." unique_id=2035053463 instance=ExtResource("37_hud")]
+mostrar_lista_pedidos = false
+mostrar_boton_pausa = true
 
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/ResorteraBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/PiedraBttn" to="EquipmentManager" method="seleccionar_item" binds= [2]]
