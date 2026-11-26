@@ -29,11 +29,13 @@
 [ext_resource type="Texture2D" uid="uid://cpea26vy17jrj" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/focused.png" id="18_vajee"]
 [ext_resource type="PackedScene" uid="uid://yvbhs74efvve" path="res://Scenes/prenda_proyectil.tscn" id="19_q6bmp"]
 [ext_resource type="PackedScene" uid="uid://crd2qpr8o6wwa" path="res://Scenes/canasto_clientes.tscn" id="20_y7ef4"]
+[ext_resource type="PackedScene" uid="uid://kndalb1fpdwd" path="res://Scenes/piedra_pirata.tscn" id="25_7f3xw"]
 [ext_resource type="PackedScene" uid="uid://b8cfe6dl1osm7" path="res://Scenes/caña_pescar.tscn" id="25_lyd35"]
 [ext_resource type="PackedScene" uid="uid://ba74thabpd3fs" path="res://Assets/Estaciones/lavadora.glb" id="30_opdkc"]
 [ext_resource type="PackedScene" uid="uid://bh1c7o2f6624c" path="res://Assets/Estaciones/tendedero.glb" id="32_pyv4c"]
 [ext_resource type="Script" uid="uid://dbvkwqy75b1nd" path="res://juego/estaciones_ropa.gd" id="33_yosrx"]
 [ext_resource type="Script" uid="uid://sfkcmcrug8d6" path="res://scripts/controlador_estaciones.gd" id="34_7hd74"]
+[ext_resource type="Script" uid="uid://ch0pkvi4xbpst" path="res://gestor_nivel_1.gd" id="36_g7br1"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x4l8m"]
 albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
@@ -41,6 +43,9 @@ albedo_color = Color(0.12156863, 0.30588236, 0.4745098, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_6l15b"]
 material = SubResource("StandardMaterial3D_x4l8m")
 size = Vector3(60, 0.2, 18)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3662s"]
+size = Vector3(60, 4, 18)
 
 [sub_resource type="BoxMesh" id="BoxMesh_t6u4c"]
 size = Vector3(0.5, 0.1, 0.5)
@@ -106,7 +111,7 @@ albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_vym6w"]
 material = SubResource("StandardMaterial3D_7m1rt")
-size = Vector3(1.6, 0.5, 7.6)
+size = Vector3(1.6, 0.5, 7.4818482)
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_13qdw"]
 
@@ -131,8 +136,14 @@ size = Vector3(2.517, 0.02, 0.25)
 [node name="BorradorNivel1" type="Node3D" unique_id=491965911]
 
 [node name="Agua" type="MeshInstance3D" parent="." unique_id=2106538815]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -1, 3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.547449, -0.9827428, 2.9759448)
 mesh = SubResource("BoxMesh_6l15b")
+
+[node name="Area3D" type="Area3D" parent="Agua" unique_id=995048559 groups=["agua"]]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Agua/Area3D" unique_id=364418114]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.9, 0)
+shape = SubResource("BoxShape3D_3662s")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=2107887811]
 transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 2.5, 7.5, 13)
@@ -153,22 +164,23 @@ visible = false
 mesh = SubResource("BoxMesh_t6u4c")
 
 [node name="Gancho1" type="MeshInstance3D" parent="Decorado" unique_id=743225432]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.05, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.05, 4.5276985)
 visible = false
 mesh = SubResource("BoxMesh_t6u4c")
 
 [node name="Gancho2" type="MeshInstance3D" parent="Decorado" unique_id=1544570180]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, 4.5276985)
 visible = false
 mesh = SubResource("BoxMesh_t6u4c")
 
 [node name="Gancho3" type="MeshInstance3D" parent="Decorado" unique_id=1886905344]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.05, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.05, 4.5276985)
 visible = false
 mesh = SubResource("BoxMesh_t6u4c")
 
 [node name="Barco" type="MeshInstance3D" parent="Decorado" unique_id=202702795]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3905692, -0.15, 1.4)
+visible = false
 mesh = SubResource("BoxMesh_i66cl")
 
 [node name="Sol" type="DirectionalLight3D" parent="." unique_id=767636178]
@@ -186,6 +198,7 @@ entorno = NodePath("../WorldEnvironment")
 script = ExtResource("2_wwye2")
 
 [node name="SistemaSogas" type="Node3D" parent="." unique_id=276943459]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013605118, 0, 0.7930393)
 script = ExtResource("4_6wmma")
 
 [node name="Loro" type="Node3D" parent="." unique_id=521108181]
@@ -196,6 +209,7 @@ script = ExtResource("6_wnnrj")
 entorno = NodePath("../WorldEnvironment")
 
 [node name="PlayerPirata" type="Node3D" parent="." unique_id=1029083601]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6315912, 0, 0.7771151)
 
 [node name="CharacterBody3D2" type="CharacterBody3D" parent="PlayerPirata" unique_id=803699823]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 0)
@@ -268,6 +282,7 @@ stretch_mode = 0
 [node name="EquipmentManager" type="Node" parent="." unique_id=217688207]
 script = ExtResource("7_wwye2")
 escena_resortera_3d = ExtResource("8_p2u03")
+escena_roca_3d = ExtResource("25_7f3xw")
 escena_cana_pescar_3d = ExtResource("25_lyd35")
 punto_mano_path = NodePath("../PlayerPirata/CharacterBody3D2/PuntoMano")
 trayectoria_path = NodePath("../PlayerPirata/CharacterBody3D2/PuntoMano/TrayectoriaResortera")
@@ -277,7 +292,8 @@ municion_manager_path = NodePath("../MunicionManager")
 script = ExtResource("16_6l15b")
 
 [node name="PrendaRecolectable" parent="." unique_id=1134208708 instance=ExtResource("17_i66cl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6992619, 0.25878954, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0137174, 0.25878954, 0.80074)
+visible = false
 municion_manager_path = NodePath("../MunicionManager")
 
 [node name="LanzadorPrenda" type="Node3D" parent="." unique_id=1750836082]
@@ -289,7 +305,7 @@ escena_prenda_proyectil = ExtResource("19_q6bmp")
 [node name="Plataformas" type="Node3D" parent="." unique_id=1693902764]
 
 [node name="PlataformaCentral" type="MeshInstance3D" parent="Plataformas" unique_id=2009083437]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, -0.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.462216, -0.25, 0.8825414)
 mesh = SubResource("BoxMesh_ckmep")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Plataformas/PlataformaCentral" unique_id=411773740]
@@ -311,7 +327,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.18332863)
 shape = SubResource("BoxShape3D_13qdw")
 
 [node name="PlataformaTendedero" type="MeshInstance3D" parent="Plataformas" unique_id=1113592539]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -0.25, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -0.25, 4.601156)
 mesh = SubResource("BoxMesh_satd5")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Plataformas/PlataformaTendedero" unique_id=1611681032]
@@ -321,7 +337,7 @@ physics_material_override = SubResource("PhysicsMaterial_xrivr")
 shape = SubResource("BoxShape3D_b1lj4")
 
 [node name="PlataformaDespacho" type="MeshInstance3D" parent="Plataformas" unique_id=109006911]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82333696, -0.24084902, 0.020400047)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82333696, -0.24084902, 0.8725617)
 mesh = SubResource("BoxMesh_vym6w")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Plataformas/PlataformaDespacho" unique_id=1831679032]
@@ -353,11 +369,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00024414063, 0.61073303, 0)
 shape = SubResource("BoxShape3D_7f2x3")
 
 [node name="CanastoClientes" parent="ObjetosInteractivos" unique_id=381048849 instance=ExtResource("20_y7ef4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88381636, -0.059416294, 0.07401085)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0606794, -0.059416294, 0.83061767)
+visible = false
 municion_manager_path = NodePath("../../MunicionManager")
 
 [node name="TendederoPirata" parent="ObjetosInteractivos" unique_id=735485260 instance=ExtResource("32_pyv4c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.997628, 0, 2.953653)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.997628, 0, 4.593251)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="ObjetosInteractivos/TendederoPirata" unique_id=407112637 groups=["estacion_tendedero"]]
 physics_material_override = SubResource("PhysicsMaterial_wi6ju")
@@ -371,6 +388,18 @@ script = ExtResource("33_yosrx")
 
 [node name="ControladorEstaciones" type="Node" parent="." unique_id=2071474281]
 script = ExtResource("34_7hd74")
+
+[node name="GestorNivel1" type="Node" parent="." unique_id=1125872497]
+script = ExtResource("36_g7br1")
+
+[node name="MuelleBarco1" type="Marker3D" parent="." unique_id=1143618517]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.764369, 0, -1.1198177)
+
+[node name="MuelleBarco2" type="Marker3D" parent="." unique_id=197325151]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9048228, 0, 0.8196981)
+
+[node name="MuelleBarco3" type="Marker3D" parent="." unique_id=496462841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7910085, 0, 2.7217588)
 
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/ResorteraBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/PiedraBttn" to="EquipmentManager" method="seleccionar_item" binds= [2]]
