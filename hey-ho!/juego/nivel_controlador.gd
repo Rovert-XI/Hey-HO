@@ -8,15 +8,20 @@ extends Node
 ##   - Al terminar (se acaba el tiempo, pasan todos los clientes o se suelta una base) guarda el
 ##     resultado y va a la pantalla de Resultado.
 ##
-## CONTROLES REALES (no hay teclas de prueba):
-##   A / D ........ caminar (script del pirata)          P ... tomar prenda del canasto (Isabella)
+## CONTROLES REALES (acordados por el equipo; no hay teclas de prueba):
+##   A / D ........ caminar (script del pirata)
+##   P ............ coger el canasto y la ropa (Isabella)
 ##   1 ............ resortera: apuntar con clic sostenido y soltar. La prenda llega a la lavadora
 ##                  (tiro a la izquierda) o al tendedero (a la derecha). Es la ÚNICA forma de que la ropa llegue.
+##   2 ............ piedra: se equipa con el 2 y sirve para espantar al loro (Isabella)
 ##   3 ............ caña (la de Isabella): clic para lanzar la boya, otro clic para recogerla.
 ##                  Con la boya sobre la lavadora o el tendedero recoge la prenda lista (1 s);
 ##                  con la boya en el agua rescata una prenda caída (2 s). Hay que estar en la zona.
 ##   E ............ entregar el pedido en el despacho (con prendas secas en la mano)
 ##   R (mantener) . reparar la soga de la zona donde estás parado
+##
+## Las teclas de ESTE script (E y R) están en las constantes TECLA_* de abajo. Las de Isabella (P, 1, 2, 3)
+## las lee su propio código; aquí solo se listan para que las ayudas en pantalla digan siempre lo mismo.
 ##
 ## Lo que viene de otros compañeros entra por los métodos PÚBLICOS de la sección "API pública":
 ##   lanzar(lado, x, estado) <- la resortera de Isabella (se llama sola desde _contar_tiro)
@@ -28,6 +33,17 @@ extends Node
 @export var prendas_por_pedido := 2
 ## Mitad del ancho (en x) de cada zona: qué tan cerca debe estar la mano del pirata para usar la estación.
 @export var alcance_x := 1.2
+
+# ---------------------------------------------------------------- Teclas (única fuente de verdad)
+## Las que lee este script.
+const TECLA_ENTREGAR: Key = KEY_E
+const TECLA_REPARAR: Key = KEY_R
+## Las que lee el código de Isabella (aquí solo sirven para escribir las ayudas con la tecla correcta).
+const TECLA_CANASTO: Key = KEY_P
+const TECLA_RESORTERA: Key = KEY_1
+const TECLA_PIEDRA: Key = KEY_2
+const TECLA_CANA: Key = KEY_3
+const ESCENA_PAUSA: PackedScene = preload("res://juego/pausa.tscn")
 
 # ---------------------------------------------------------------- Constantes del mapa (posiciones en x)
 ## Separa la lavadora (izquierda) del tendedero (derecha): el centro entre las anclas de sus sogas.
@@ -45,10 +61,6 @@ const ZONAS := {"lavadora": X_LAVADORA, "tendedero": X_TENDEDERO, "despacho": X_
 const COLOR_ZONA := {
 	"lavadora": Color(0.35, 0.7, 1.0), "tendedero": Color(0.5, 0.9, 0.5), "despacho": Color(1.0, 0.8, 0.3)}
 const TITULO_ZONA := {"lavadora": "LAVADORA", "tendedero": "TENDEDERO", "despacho": "DESPACHO"}
-const AYUDA_ZONA := {
-	"lavadora": "1 resortera: lanzar prenda sucia\n3 caña: recoger lavada",
-	"tendedero": "1 resortera: lanzar prenda lavada\n3 caña: recoger seca",
-	"despacho": "E: entregar pedido"}
 
 # ---------------------------------------------------------------- Piezas del nivel
 @onready var hud: HudHeyHo = %Hud                                  # el HUD de Kevin
@@ -82,12 +94,17 @@ var _boya_antes := false
 var _r_antes := false
 var _item_hud := -1                        # herramienta que el HUD de Kevin tiene marcada (para no repetir)
 var _zonas := {}                           # nombre -> {"mat": material del marcador, "texto": Label3D}
+var _ayuda_zona := {}                      # nombre de zona -> ayuda con las teclas (se arma en _ready)
+var _aviso_equipo := {}                    # herramienta -> mensaje al equiparla (se arma en _ready)
 var _ultimo_aviso := ""
 var _t_aviso := 0.0
+var _menu_pausa: MenuPausa
 
 
 ## Arranque: carga el nivel actual, conecta sol, sogas, loro, HUD y estaciones, y llega el primer cliente.
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_montar_menu_pausa()
 	EstadoJuego.asegurar_carga()
 	_n = EstadoJuego.nivel_actual
 	_datos = EstadoJuego.datos_nivel(_n)
@@ -101,6 +118,7 @@ func _ready() -> void:
 	var cielo := get_node_or_null("Mapa/Cielo") as CieloAtardecer
 	if sistema_sol.cielo == null and cielo != null:
 		sistema_sol.cielo = cielo
+	_armar_textos()
 	_conectar_resortera()
 	_crear_estaciones()
 	_crear_zonas()
@@ -108,6 +126,11 @@ func _ready() -> void:
 	hud.iniciar_nivel(_n)
 	hud.conectar_sogas(sogas)
 	hud.conectar_loro(loro)
+	if _equipo and _equipo.has_signal("tension_cambiada"):
+		_equipo.tension_cambiada.connect(hud.set_carga)
+	if _equipo and _equipo.has_signal("piedras_cambiadas"):
+		_equipo.piedras_cambiadas.connect(hud.set_piedras)
+		hud.set_piedras(int(_equipo.get("piedras_disponibles")))
 	sogas.nivel_perdido.connect(_on_base_suelta)
 	sogas.reparacion_cobrada.connect(_on_reparacion_cobrada)
 
@@ -118,7 +141,7 @@ func _ready() -> void:
 
 ## Cada fotograma: baja el reloj, avanza los pedidos, lee E/caña/R, resalta la zona y revisa si el nivel terminó.
 func _process(delta: float) -> void:
-	if _terminado:
+	if _terminado or get_tree().paused:
 		return
 	_tiempo -= delta
 	hud.set_tiempo(_tiempo)
@@ -134,12 +157,82 @@ func _process(delta: float) -> void:
 		terminar(false)                   # ya pasaron todos los clientes
 
 
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE):
+		return
+	if _terminado:
+		return
+
+	if get_tree().paused:
+		_reanudar_desde_pausa()
+	else:
+		_abrir_pausa()
+	get_viewport().set_input_as_handled()
+
+
+func _montar_menu_pausa() -> void:
+	var capa := CanvasLayer.new()
+	capa.name = "CapaPausa"
+	capa.layer = 20
+	capa.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(capa)
+
+	_menu_pausa = ESCENA_PAUSA.instantiate() as MenuPausa
+	_menu_pausa.hide()
+	capa.add_child(_menu_pausa)
+	_menu_pausa.continuar.connect(_reanudar_desde_pausa)
+	_menu_pausa.reiniciar.connect(_reiniciar_desde_pausa)
+	_menu_pausa.volver_al_menu.connect(_volver_al_menu_desde_pausa)
+
+
+func _abrir_pausa() -> void:
+	_menu_pausa.mostrar_menu()
+	get_tree().paused = true
+
+
+func _reanudar_desde_pausa() -> void:
+	get_tree().paused = false
+	_menu_pausa.hide()
+
+
+func _reiniciar_desde_pausa() -> void:
+	get_tree().paused = false
+	Navegador.ir_a(self, EstadoJuego.RUTA_NIVEL)
+
+
+func _volver_al_menu_desde_pausa() -> void:
+	get_tree().paused = false
+	Navegador.ir_a(self, Navegador.MENU)
+
+
 ## Busca la mano del pirata (nodo "PuntoMano") dentro de PlayerPirata, con el nombre que tenga su cuerpo.
 func _buscar_mano() -> Node3D:
 	var pirata := get_node_or_null("Mapa/PlayerPirata")
 	if pirata == null:
 		return null
 	return pirata.find_child("PuntoMano", true, false) as Node3D
+
+
+# ---------------------------------------------------------------- Textos con las teclas
+## Nombre de la tecla tal como se escribe en pantalla ("E", "1", "P"...).
+static func _tecla(k: Key) -> String:
+	return OS.get_keycode_string(k)
+
+
+## Arma todas las ayudas con las constantes TECLA_*: si una tecla cambia, cambia en todos los textos.
+func _armar_textos() -> void:
+	var res := _tecla(TECLA_RESORTERA)
+	var cana := _tecla(TECLA_CANA)
+	_ayuda_zona = {
+		"lavadora": "%s resortera: lanzar prenda sucia\n%s caña: recoger lavada" % [res, cana],
+		"tendedero": "%s resortera: lanzar prenda lavada\n%s caña: recoger seca" % [res, cana],
+		"despacho": "%s: entregar pedido\n%s: coger canasto y ropa" % [_tecla(TECLA_ENTREGAR), _tecla(TECLA_CANASTO)],
+	}
+	_aviso_equipo = {
+		"resortera": "Resortera (%s): mantén clic para apuntar y suelta para lanzar" % res,
+		"piedra": "Piedra (%s): úsala para espantar al loro" % _tecla(TECLA_PIEDRA),
+		"cana": "Caña (%s): clic para lanzar la boya, otro clic para recogerla" % cana,
+	}
 
 
 # ---------------------------------------------------------------- Resortera de Isabella
@@ -390,7 +483,7 @@ func _actualizar_zonas() -> void:
 		var mat: StandardMaterial3D = _zonas[nombre].mat
 		mat.albedo_color.a = 0.55 if dentro else 0.2
 		var texto: Label3D = _zonas[nombre].texto
-		texto.text = TITULO_ZONA[nombre] + ("\n" + AYUDA_ZONA[nombre] if dentro else "")
+		texto.text = TITULO_ZONA[nombre] + ("\n" + _ayuda_zona[nombre] if dentro else "")
 
 
 ## Mensaje corto en el HUD; no repite el mismo texto seguido (por si se mantiene la tecla).
@@ -404,24 +497,24 @@ func _avisar(texto: String, tipo := "info") -> void:
 
 
 # ---------------------------------------------------------------- Entrega (E) y caña (3)
-## E: entrega el pedido (un toque) cuando el pirata está en la zona DESPACHO.
+## E (TECLA_ENTREGAR): entrega el pedido (un toque) cuando el pirata está en la zona DESPACHO.
 func _leer_entrega() -> void:
-	var e := Input.is_key_pressed(KEY_E)
+	var e := Input.is_key_pressed(TECLA_ENTREGAR)
 	if e:
 		if _sitio_cercano() == "despacho":
 			if not _entrega_hecha:
 				if entregar_en_despacho():
 					_entrega_hecha = true
 				elif not _e_antes:
-					_avisar("Para entregar necesitas un pedido y una prenda seca en la mano")
+					_avisar("Para entregar (%s) necesitas un pedido y una prenda seca en la mano" % _tecla(TECLA_ENTREGAR))
 		elif not _e_antes:
-			_avisar("E sirve en el despacho para entregar el pedido")
+			_avisar("%s sirve en el despacho para entregar el pedido" % _tecla(TECLA_ENTREGAR))
 	else:
 		_entrega_hecha = false
 	_e_antes = e
 
 
-## La caña de Isabella (CanaPescar) si está equipada (tecla 3) o null.
+## La caña de Isabella (CanaPescar) si está equipada (TECLA_CANA, la 3) o null.
 func _cana_equipada() -> CanaPescar:
 	if _equipo == null:
 		return null
@@ -465,18 +558,25 @@ func _sincronizar_hud() -> void:
 	var item := int(_equipo.get("item_actual"))
 	if item == _item_hud:
 		return
+	var primera_vez := _item_hud == -1        # al empezar el nivel no se avisa, solo cuando el jugador cambia
 	_item_hud = item
+	var herramienta := ""
 	match item:
-		1: hud.equipar("resortera")
-		2: hud.equipar("piedra")
-		3: hud.equipar("cana")
+		1: herramienta = "resortera"
+		2: herramienta = "piedra"
+		3: herramienta = "cana"
+	if herramienta == "":
+		return
+	hud.equipar(herramienta)
+	if not primera_vez:
+		_avisar(_aviso_equipo[herramienta])
 
 
 # ---------------------------------------------------------------- Sogas
-## R mantenida: repara la soga de la plataforma de la zona donde está el pirata (lavadora, tendedero o despacho).
+## R (TECLA_REPARAR) mantenida: repara la soga de la plataforma de la zona donde está el pirata (lavadora, tendedero o despacho).
 ## Fuera de las zonas no hace nada y avisa.
 func _leer_reparacion(delta: float) -> void:
-	var r := Input.is_key_pressed(KEY_R)
+	var r := Input.is_key_pressed(TECLA_REPARAR)
 	if r:
 		var sitio := _sitio_cercano()
 		if sitio != "":
@@ -484,7 +584,7 @@ func _leer_reparacion(delta: float) -> void:
 		else:
 			dejar_de_reparar()
 			if not _r_antes:
-				_avisar("Camina hasta una zona para reparar su soga")
+				_avisar("Camina hasta una zona y mantén %s para reparar su soga" % _tecla(TECLA_REPARAR))
 	else:
 		dejar_de_reparar()
 	_r_antes = r
@@ -501,13 +601,19 @@ func _on_reparacion_cobrada(costo: int) -> void:
 	hud.set_oro(_oro)
 
 
-## Línea fija con los controles del nivel (abajo a la izquierda).
+## Recordatorio fijo con los controles del nivel (abajo a la izquierda, en dos líneas cortas para no tapar
+## el inventario del HUD, que va centrado). Respeta el ajuste "pistas de teclas" del menú de opciones.
 func _mostrar_controles() -> void:
 	var capa := CanvasLayer.new()
 	capa.layer = 5
+	capa.visible = EstadoJuego.pistas_teclas
 	var l := Label.new()
-	l.text = "A/D mover · P canasto · 1 resortera (arrastrar y soltar) · 3 caña (clic) · E entregar · R reparar"
-	l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 16)
-	l.add_theme_font_size_override("font_size", 13)
+	l.text = "A/D mover · %s canasto y ropa · %s reparar soga\n%s resortera · %s piedra · %s caña · %s entregar" % [
+		_tecla(TECLA_CANASTO), _tecla(TECLA_REPARAR),
+		_tecla(TECLA_RESORTERA), _tecla(TECLA_PIEDRA), _tecla(TECLA_CANA), _tecla(TECLA_ENTREGAR)]
+	l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 12)
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_constant_override("outline_size", 4)
+	l.add_theme_color_override("font_outline_color", Color(0.03, 0.06, 0.1, 0.9))
 	capa.add_child(l)
 	add_child(capa)

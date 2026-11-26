@@ -1,289 +1,302 @@
 class_name HudHeyHo
 extends CanvasLayer
-## HUD de ¡Hey HO! Se instancia dentro de la escena del nivel y se maneja con métodos y señales.
-## Colores = funciones del juego (ver UITema): CREMA lo que vale · VERDE acierto · ROJO peligro · MADERA sogas.
-##
-## API principal (la usa la lógica del nivel):
-##   iniciar_nivel(n) · set_oro(v) · set_tiempo(s) · set_reparacion(oro) · set_piedras(n) · equipar("resortera"|"piedra"|"cana")
-##   agregar_pedido(id, titulo, paciencia, prendas) · actualizar_pedido(id, restante) · quitar_pedido(id, entregado)
-##   set_franja(ini, fin) · set_carga(t) · mostrar_carga(bool) · mostrar_pago(cantidad) · mostrar_aviso(texto, tipo)
-##   conectar_sogas(nodo_sistema_sogas) · conectar_loro(nodo_loro)
 
-const FILA_SOGA := preload("res://componentes/fila_soga.tscn")
-const BARRA_PACIENCIA := preload("res://componentes/barra_paciencia.tscn")
-const PAUSA := preload("res://juego/pausa.tscn")
-const CARGA_MAX := 1.2   # segundos que cubre la barra de carga de la resortera
+const ESCENA_FILA_SOGA: PackedScene = preload("res://componentes/fila_soga.tscn")
+const ESCENA_BARRA_PACIENCIA: PackedScene = preload("res://componentes/barra_paciencia.tscn")
+const CARGA_MAX := 1.0
 
-@onready var raiz: Control = %Raiz
-@onready var oro: Label = %Oro
-@onready var barra_oro: ProgressBar = %BarraOro
-@onready var marca_minimo: ColorRect = %MarcaMinimo
-@onready var texto_minimo: Label = %TextoMinimo
-@onready var tiempo: Label = %Tiempo
-@onready var dia: Label = %Dia
-@onready var barra_reparacion: ProgressBar = %BarraReparacion
-@onready var texto_reparacion: Label = %TextoReparacion
-@onready var lista_sogas: VBoxContainer = %ListaSogas
-@onready var lista_pedidos: VBoxContainer = %ListaPedidos
-@onready var contenedor_carga: Control = %ContenedorCarga
-@onready var franja: ColorRect = %Franja
-@onready var relleno: ColorRect = %Relleno
-@onready var extra_piedra: Label = %ExtraPiedra
-@onready var aviso: Label = %AvisoTexto
-@onready var flotantes: Control = %Flotantes
-@onready var borde_alerta: Panel = %BordeAlerta
-@onready var pista_pausa: Label = %PistaPausa
-@onready var slots := {
-	"resortera": %SlotResortera as PanelContainer,
-	"piedra": %SlotPiedra as PanelContainer,
-	"cana": %SlotCana as PanelContainer,
+const PLATAFORMAS := {
+	"lavadora": "Lavadora",
+	"tendedero": "Tendedero",
+	"despacho": "Despacho",
 }
 
-signal pausa_cambiada(activa: bool)
+@export var segundos_inactividad: float = 3.0
+@export_range(0.0, 1.0, 0.05) var opacidad_reposo: float = 0.5
+@export var duracion_fade: float = 0.35
 
-var _filas := {}
-var _pedidos := {}
-var _minimo := 0
-var _franja := Vector2(0.7, 1.0)
-var _tiempo_en_peligro := false
-var _pausa: Control = null
+@onready var _inferior: Control = %Inferior
+@onready var _oro: Label = %Oro
+@onready var _barra_oro: ProgressBar = %BarraOro
+@onready var _marca_minimo: ColorRect = %MarcaMinimo
+@onready var _texto_minimo: Label = %TextoMinimo
+@onready var _tiempo: Label = %Tiempo
+@onready var _dia: Label = %Dia
+@onready var _barra_reparacion: ProgressBar = %BarraReparacion
+@onready var _texto_reparacion: Label = %TextoReparacion
+@onready var _panel_carga: PanelContainer = $Raiz/Inferior/ColumnaInferior/ContenedorCarga/PanelCarga
+@onready var _lista_sogas: VBoxContainer = %ListaSogas
+@onready var _lista_pedidos: VBoxContainer = %ListaPedidos
+@onready var _franja: ColorRect = %Franja
+@onready var _relleno: ColorRect = %Relleno
+@onready var _aviso: Label = %AvisoTexto
+@onready var _flotantes: Control = %Flotantes
+@onready var _borde_alerta: Panel = %BordeAlerta
+@onready var _slot_resortera: Control = %SlotResortera
+@onready var _slot_piedra: Control = %SlotPiedra
+@onready var _slot_cana: Control = %SlotCana
+@onready var _extra_piedra: Label = %ExtraPiedra
+
+var _filas_sogas: Dictionary = {}
+var _pedidos: Dictionary = {}
+var _oro_actual := 0
+var _oro_minimo := 0
+var _oro_maximo := 90
+var _tiempo_inactividad := 0.0
+var _carga_mostrada := false
+var _en_reposo := false
+var _tween_reposo: Tween
 var _tween_aviso: Tween
-var _tween_borde: Tween
+var _tween_alerta: Tween
+var _item_actual := ""
 
 
 func _ready() -> void:
-	for p: String in EstadoJuego.PLATAFORMAS:
-		var fila: FilaSoga = FILA_SOGA.instantiate()
-		lista_sogas.add_child(fila)
-		fila.configurar(p, EstadoJuego.NOMBRES_PLATAFORMA[p])
-		_filas[p] = fila
-	aviso.modulate.a = 0.0
-	borde_alerta.modulate.a = 0.0
-	mostrar_carga(false)
-	set_franja(0.7, 1.0)
-	set_carga(0.0)
-	equipar("resortera")
+	_aviso.modulate.a = 0.0
+	_borde_alerta.hide()
+	_franja.visible = false
 	set_piedras(3)
-	aplicar_pistas()
-	iniciar_nivel(EstadoJuego.nivel_actual)
+	_actualizar_pistas()
 
 
-# ---------------------------------------------------------------- Nivel, oro, tiempo, reparación
-func iniciar_nivel(n: int) -> void:
-	var d := EstadoJuego.datos_nivel(n)
-	dia.text = "Día %d" % n
-	_minimo = d.minimo
-	barra_oro.max_value = d.oro_max
-	var ratio := float(d.minimo) / float(d.oro_max)
-	marca_minimo.anchor_left = ratio
-	marca_minimo.anchor_right = ratio
-	texto_minimo.text = "Mínimo %d oro" % d.minimo
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton:
+		_tiempo_inactividad = 0.0
+		if _en_reposo:
+			_en_reposo = false
+			_fundir(1.0)
+
+
+func _process(delta: float) -> void:
+	if _en_reposo:
+		return
+	_tiempo_inactividad += delta
+	if _tiempo_inactividad >= segundos_inactividad:
+		_en_reposo = true
+		_fundir(opacidad_reposo)
+
+
+func iniciar_nivel(numero: int) -> void:
+	var datos := EstadoJuego.datos_nivel(numero)
+	_dia.text = "Día %d" % numero
+	_oro_actual = 0
+	_oro_minimo = int(datos.minimo)
+	_oro_maximo = maxi(int(datos.oro_max), 1)
+	_barra_oro.max_value = _oro_maximo
+	_barra_reparacion.max_value = EstadoJuego.COSTO_REPARACION
+	_barra_reparacion.value = EstadoJuego.oro_total
+	_texto_reparacion.text = "Barco %d / %d" % [EstadoJuego.oro_total, EstadoJuego.COSTO_REPARACION]
+	_texto_minimo.text = "Mínimo %d oro" % _oro_minimo
+	var fraccion_minima := clampf(float(_oro_minimo) / float(_oro_maximo), 0.0, 1.0)
+	_marca_minimo.anchor_left = fraccion_minima
+	_marca_minimo.anchor_right = fraccion_minima
 	set_oro(0)
-	set_tiempo(float(d.duracion))
-	set_reparacion(EstadoJuego.oro_total)
+	set_tiempo(float(datos.duracion))
+	equipar("resortera")
+	mostrar_carga(false)
+	set_carga(0.0)
+	_actualizar_pistas()
+	_asegurar_filas_sogas()
 
 
-func set_oro(valor: int) -> void:
-	var subio := oro.text != "" and valor > int(oro.text)
-	oro.text = str(valor)
-	barra_oro.value = valor
-	# CREMA = lo que vale; pasa a VERDE al alcanzar el mínimo (acierto).
-	barra_oro.theme_type_variation = &"BarraVerde" if valor >= _minimo else &"BarraCrema"
-	if subio:
-		oro.pivot_offset = oro.size / 2.0
-		var t := create_tween()
-		t.tween_property(oro, "scale", Vector2(1.3, 1.3), 0.08)
-		t.tween_property(oro, "scale", Vector2.ONE, 0.12)
+func conectar_sogas(sistema: SistemaSogas) -> void:
+	_asegurar_filas_sogas()
+	for plataforma: String in PLATAFORMAS:
+		var fila := _filas_sogas[plataforma] as FilaSoga
+		fila.poner_resistencia(0, float(sistema.sogas[plataforma][0]))
+		fila.poner_resistencia(1, float(sistema.sogas[plataforma][1]))
+		fila.poner_inestable(bool(sistema.desestab[plataforma]))
+		_filas_sogas[plataforma] = fila
+
+	if not sistema.soga_cambio.is_connected(_al_cambiar_soga):
+		sistema.soga_cambio.connect(_al_cambiar_soga)
+	if not sistema.plataforma_desestabilizada.is_connected(_al_cambiar_estabilidad):
+		sistema.plataforma_desestabilizada.connect(_al_cambiar_estabilidad)
+	if not sistema.reparacion_progreso.is_connected(_al_cambiar_reparacion):
+		sistema.reparacion_progreso.connect(_al_cambiar_reparacion)
+
+
+func conectar_loro(loro: Loro) -> void:
+	if not loro.aviso_graznido.is_connected(_al_aviso_loro):
+		loro.aviso_graznido.connect(_al_aviso_loro)
+	if not loro.loro_huyo.is_connected(_al_loro_huyo):
+		loro.loro_huyo.connect(_al_loro_huyo)
 
 
 func set_tiempo(segundos: float) -> void:
-	tiempo.text = EstadoJuego.formato_tiempo(segundos)
-	var peligro := segundos <= 10.0
-	if peligro != _tiempo_en_peligro:
-		_tiempo_en_peligro = peligro
-		tiempo.theme_type_variation = &"LabelTiempoPeligro" if peligro else &"LabelTiempo"
+	_tiempo.text = EstadoJuego.formato_tiempo(segundos)
+	_tiempo.add_theme_color_override("font_color", Color("#f3d9a1") if segundos > 15.0 else Color("#ff6b5e"))
 
 
-func set_reparacion(oro_ahorrado: int) -> void:
-	barra_reparacion.max_value = EstadoJuego.COSTO_REPARACION
-	barra_reparacion.value = mini(oro_ahorrado, EstadoJuego.COSTO_REPARACION)
-	texto_reparacion.text = "Barco %d / %d" % [oro_ahorrado, EstadoJuego.COSTO_REPARACION]
-
-
-# ---------------------------------------------------------------- Inventario
-func equipar(herramienta: String) -> void:
-	for nombre: String in slots:
-		var slot: PanelContainer = slots[nombre]
-		slot.theme_type_variation = &"PanelSlotActivo" if nombre == herramienta else &"PanelSlot"
+func set_oro(cantidad: int) -> void:
+	_oro_actual = maxi(cantidad, 0)
+	_oro.text = str(_oro_actual)
+	_barra_oro.value = _oro_actual
 
 
 func set_piedras(cantidad: int) -> void:
-	extra_piedra.text = "x%d" % cantidad
-	slots["piedra"].modulate.a = 1.0 if cantidad > 0 else 0.45
+	_extra_piedra.text = "x%d" % maxi(cantidad, 0)
 
 
-func aplicar_pistas() -> void:
-	for nodo in get_tree().get_nodes_in_group("pista_tecla"):
-		nodo.visible = EstadoJuego.pistas_teclas
-	pista_pausa.visible = EstadoJuego.pistas_teclas
+func set_carga(fraccion: float) -> void:
+	var carga := clampf(fraccion, 0.0, 1.0)
+	_relleno.anchor_right = carga
+	_franja.visible = carga > 0.0
+	_panel_carga.visible = carga > 0.0 or _carga_mostrada
 
 
-# ---------------------------------------------------------------- Barra de carga de la resortera
-## Segundos de inicio y fin de la franja verde (0,7 a 1,0 s en el concepto; se angosta a 0,15 s con sogas bajo 30).
-func set_franja(inicio: float, fin: float) -> void:
-	_franja = Vector2(inicio, fin)
-	franja.anchor_left = clampf(inicio / CARGA_MAX, 0.0, 1.0)
-	franja.anchor_right = clampf(fin / CARGA_MAX, 0.0, 1.0)
+func mostrar_carga(visible: bool) -> void:
+	_carga_mostrada = visible
+	if not visible:
+		set_carga(0.0)
+	else:
+		_panel_carga.show()
 
 
-func set_carga(t: float) -> void:
-	relleno.anchor_right = clampf(t / CARGA_MAX, 0.0, 1.0)
-	var en_franja := t >= _franja.x and t <= _franja.y
-	relleno.color = UITema.VERDE if en_franja else UITema.CELESTE
-
-
-func mostrar_carga(visible_: bool) -> void:
-	contenedor_carga.visible = visible_
-
-
-# ---------------------------------------------------------------- Pedidos (barcos clientes)
-func agregar_pedido(id: int, titulo: String, paciencia_max: float, prendas := 2) -> BarraPaciencia:
-	var barra: BarraPaciencia = BARRA_PACIENCIA.instantiate()
-	lista_pedidos.add_child(barra)
-	barra.configurar(titulo, paciencia_max, prendas)
-	_pedidos[id] = barra
-	return barra
-
-
-func actualizar_pedido(id: int, restante: float) -> void:
-	if _pedidos.has(id):
-		(_pedidos[id] as BarraPaciencia).actualizar(restante)
-
-
-func quitar_pedido(id: int, entregado := true) -> void:
-	if _pedidos.has(id):
-		(_pedidos[id] as BarraPaciencia).cerrar(entregado)
-		_pedidos.erase(id)
-
-
-# ---------------------------------------------------------------- Mensajes y efectos
-## Monedas CREMA que suben junto al contador. Con 0 se muestra "sin pago" en ROJO (el barco se va).
-func mostrar_pago(cantidad: int) -> void:
-	var l := Label.new()
-	l.theme_type_variation = &"LabelOro"
-	l.text = "+%d" % cantidad if cantidad > 0 else "Sin pago"
-	if cantidad <= 0:
-		l.add_theme_color_override("font_color", UITema.ROJO)
-	flotantes.add_child(l)
-	l.global_position = oro.global_position + Vector2(70.0, 6.0)
-	var t := create_tween().set_parallel()
-	t.tween_property(l, "position:y", l.position.y - 56.0, 0.9)
-	t.tween_property(l, "modulate:a", 0.0, 0.9).set_delay(0.3)
-	t.chain().tween_callback(l.queue_free)
-
-
-## tipo: "info" (CREMA), "exito" (VERDE) o "peligro" (ROJO).
-func mostrar_aviso(texto: String, tipo := "info") -> void:
-	aviso.text = texto
-	var color := UITema.CREMA
-	if tipo == "exito":
-		color = UITema.VERDE
-	elif tipo == "peligro":
-		color = UITema.ROJO
-	aviso.add_theme_color_override("font_color", color)
-	if _tween_aviso:
-		_tween_aviso.kill()
-	aviso.modulate.a = 0.0
-	_tween_aviso = create_tween()
-	_tween_aviso.tween_property(aviso, "modulate:a", 1.0, 0.15)
-	_tween_aviso.tween_interval(1.6)
-	_tween_aviso.tween_property(aviso, "modulate:a", 0.0, 0.4)
-
-
-## Borde rojo que parpadea (alerta del loro, sogas por soltarse...).
-func alerta_borde(segundos := 3.0) -> void:
-	if _tween_borde:
-		_tween_borde.kill()
-	borde_alerta.modulate.a = 0.0
-	_tween_borde = create_tween()
-	for i in maxi(1, int(segundos / 0.5)):
-		_tween_borde.tween_property(borde_alerta, "modulate:a", 1.0, 0.25)
-		_tween_borde.tween_property(borde_alerta, "modulate:a", 0.15, 0.25)
-	_tween_borde.tween_property(borde_alerta, "modulate:a", 0.0, 0.3)
-
-
-# ---------------------------------------------------------------- Sogas
 func poner_soga(plataforma: String, indice: int, resistencia: float) -> void:
-	if _filas.has(plataforma):
-		(_filas[plataforma] as FilaSoga).poner_resistencia(indice, resistencia)
+	_asegurar_filas_sogas()
+	var fila := _filas_sogas.get(plataforma) as FilaSoga
+	if is_instance_valid(fila):
+		fila.poner_resistencia(indice, resistencia)
 
 
 func poner_inestable(plataforma: String, inestable: bool) -> void:
-	if _filas.has(plataforma):
-		(_filas[plataforma] as FilaSoga).poner_inestable(inestable)
-	if inestable:
-		mostrar_aviso("¡Plataforma inestable: repárala!", "peligro")
-		alerta_borde(2.0)
+	_asegurar_filas_sogas()
+	var fila := _filas_sogas.get(plataforma) as FilaSoga
+	if is_instance_valid(fila):
+		fila.poner_inestable(inestable)
 
 
 func poner_reparacion(plataforma: String, fraccion: float) -> void:
-	if _filas.has(plataforma):
-		(_filas[plataforma] as FilaSoga).poner_reparacion(fraccion)
+	_asegurar_filas_sogas()
+	var fila := _filas_sogas.get(plataforma) as FilaSoga
+	if is_instance_valid(fila):
+		fila.poner_reparacion(fraccion)
 
 
-## Conecta el SistemaSogas de la lógica del juego (sus señales llevan los mismos nombres).
-func conectar_sogas(sistema: Node) -> void:
-	sistema.connect("soga_cambio", poner_soga)
-	sistema.connect("plataforma_desestabilizada", poner_inestable)
-	sistema.connect("reparacion_progreso", poner_reparacion)
-	sistema.connect("nivel_perdido", _on_nivel_perdido)
-	if "sogas" in sistema:
-		var datos: Dictionary = sistema.sogas
-		for p: String in datos:
-			for i in 2:
-				poner_soga(p, i, float(datos[p][i]))
+func alerta_borde(segundos: float) -> void:
+	if _tween_alerta and _tween_alerta.is_valid():
+		_tween_alerta.kill()
+	_borde_alerta.show()
+	_tween_alerta = create_tween()
+	_tween_alerta.tween_interval(maxf(segundos, 0.0))
+	_tween_alerta.tween_callback(_borde_alerta.hide)
 
 
-## Conecta el Loro de la lógica del juego.
-func conectar_loro(loro: Node) -> void:
-	loro.connect("aviso_graznido", func(_g: int) -> void:
-		mostrar_aviso("¡Cuidado, un loro!", "peligro")
-		alerta_borde(3.0))
-	loro.connect("loro_llego", func(_g: int) -> void: mostrar_aviso("¡El loro está en el tendedero!", "peligro"))
-	loro.connect("prenda_robada", func(_g: int) -> void: mostrar_aviso("¡Se llevó una prenda!", "peligro"))
-	loro.connect("loro_huyo", func(_g: int) -> void: mostrar_aviso("¡Loro espantado!", "exito"))
+func equipar(item: String) -> void:
+	_item_actual = item
+	_slot_resortera.modulate = Color("#ffe4a3") if item == "resortera" else Color.WHITE
+	_slot_piedra.modulate = Color("#ffe4a3") if item == "piedra" else Color.WHITE
+	_slot_cana.modulate = Color("#ffe4a3") if item == "cana" else Color.WHITE
 
 
-func _on_nivel_perdido() -> void:
-	mostrar_aviso("¡La base se soltó!", "peligro")
-	alerta_borde(2.0)
-
-
-# ---------------------------------------------------------------- Pausa (Esc)
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		if _pausa == null:
-			abrir_pausa()
-		else:
-			cerrar_pausa()
-
-
-func abrir_pausa() -> void:
-	if _pausa != null:
+func agregar_pedido(id: int, titulo: String, paciencia: float, prendas: int) -> void:
+	if _pedidos.has(id):
 		return
-	_pausa = PAUSA.instantiate()
-	raiz.add_child(_pausa)
-	_pausa.continuar.connect(cerrar_pausa)
-	_pausa.reiniciar.connect(func() -> void: Navegador.ir_a(self, get_tree().current_scene.scene_file_path))
-	_pausa.volver_al_menu.connect(func() -> void: Navegador.ir_a(self, Navegador.MENU))
-	get_tree().paused = true
-	pausa_cambiada.emit(true)
+	var barra := ESCENA_BARRA_PACIENCIA.instantiate() as BarraPaciencia
+	_lista_pedidos.add_child(barra)
+	barra.configurar(titulo, paciencia, prendas)
+	_pedidos[id] = barra
 
 
-func cerrar_pausa() -> void:
-	if _pausa != null:
-		_pausa.queue_free()
-		_pausa = null
-	get_tree().paused = false
-	pausa_cambiada.emit(false)
+func actualizar_pedido(id: int, restante: float) -> void:
+	var barra := _pedidos.get(id) as BarraPaciencia
+	if is_instance_valid(barra):
+		barra.actualizar(restante)
+
+
+func quitar_pedido(id: int, entregado: bool) -> void:
+	var barra := _pedidos.get(id) as BarraPaciencia
+	_pedidos.erase(id)
+	if is_instance_valid(barra):
+		barra.cerrar(entregado)
+
+
+func mostrar_pago(cantidad: int) -> void:
+	var texto := "+%d oro" % cantidad if cantidad > 0 else "Pedido perdido"
+	var etiqueta := Label.new()
+	etiqueta.text = texto
+	etiqueta.add_theme_font_size_override("font_size", 22)
+	etiqueta.add_theme_color_override("font_color", Color("#f5d992") if cantidad > 0 else Color("#ff6b5e"))
+	etiqueta.add_theme_color_override("font_outline_color", Color("#101a29"))
+	etiqueta.add_theme_constant_override("outline_size", 5)
+	etiqueta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	etiqueta.position = get_viewport().get_visible_rect().size * Vector2(0.5, 0.55) - Vector2(90.0, 16.0)
+	etiqueta.custom_minimum_size = Vector2(180.0, 32.0)
+	_flotantes.add_child(etiqueta)
+	var tween := create_tween()
+	tween.tween_property(etiqueta, "position:y", etiqueta.position.y - 36.0, 0.8)
+	tween.parallel().tween_property(etiqueta, "modulate:a", 0.0, 0.8).set_delay(0.3)
+	tween.tween_callback(etiqueta.queue_free)
+
+
+func mostrar_aviso(texto: String, tipo := "info") -> void:
+	if _tween_aviso and _tween_aviso.is_valid():
+		_tween_aviso.kill()
+	_aviso.text = texto
+	_aviso.add_theme_color_override("font_color", _color_aviso(tipo))
+	_aviso.modulate.a = 1.0
+	_borde_alerta.visible = tipo == "peligro"
+	_tween_aviso = create_tween()
+	_tween_aviso.tween_interval(2.2)
+	_tween_aviso.tween_property(_aviso, "modulate:a", 0.0, 0.35)
+	_tween_aviso.tween_callback(func() -> void: _borde_alerta.hide())
+
+
+func _fundir(alfa: float) -> void:
+	if _tween_reposo and _tween_reposo.is_valid():
+		_tween_reposo.kill()
+	_tween_reposo = create_tween()
+	_tween_reposo.tween_property(_inferior, "modulate:a", alfa, duracion_fade)
+
+
+func _actualizar_pistas() -> void:
+	for nodo in get_tree().get_nodes_in_group("pista_tecla"):
+		if nodo is Control:
+			(nodo as Control).visible = EstadoJuego.pistas_teclas
+
+
+func _asegurar_filas_sogas() -> void:
+	if not _filas_sogas.is_empty():
+		return
+	for plataforma: String in PLATAFORMAS:
+		var fila := ESCENA_FILA_SOGA.instantiate() as FilaSoga
+		_lista_sogas.add_child(fila)
+		fila.configurar(plataforma, PLATAFORMAS[plataforma])
+		_filas_sogas[plataforma] = fila
+
+
+func _al_cambiar_soga(plataforma: String, indice: int, resistencia: float) -> void:
+	var fila := _filas_sogas.get(plataforma) as FilaSoga
+	if is_instance_valid(fila):
+		fila.poner_resistencia(indice, resistencia)
+
+
+func _al_cambiar_estabilidad(plataforma: String, inestable: bool) -> void:
+	var fila := _filas_sogas.get(plataforma) as FilaSoga
+	if is_instance_valid(fila):
+		fila.poner_inestable(inestable)
+
+
+func _al_cambiar_reparacion(plataforma: String, fraccion: float) -> void:
+	var fila := _filas_sogas.get(plataforma) as FilaSoga
+	if is_instance_valid(fila):
+		fila.poner_reparacion(fraccion)
+
+
+func _al_aviso_loro(_gancho: int) -> void:
+	mostrar_aviso("¡Se acerca el loro! Selecciona la piedra (2) y haz clic sobre él", "peligro")
+
+
+func _al_loro_huyo(_gancho: int) -> void:
+	mostrar_aviso("¡El loro salió volando!", "exito")
+
+
+func _color_aviso(tipo: String) -> Color:
+	match tipo:
+		"exito":
+			return Color("#9fe0a2")
+		"peligro":
+			return Color("#ff8b76")
+		_:
+			return Color("#f3d9a1")

@@ -2,13 +2,15 @@
 
 [ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="1_mbrec"]
 [ext_resource type="Script" uid="uid://dbwfjfswe1xug" path="res://menus/seleccion_nivel.gd" id="2_tndjf"]
-[ext_resource type="Texture2D" uid="uid://0tvilt88xxu0" path="res://assets/fondo_hub.png" id="3_5vssy"]
+[ext_resource type="Texture2D" uid="uid://0tvilt88xxu0" path="res://Assets/fondo_hub.png" id="3_5vssy"]
 
 [node name="SeleccionNivel" type="Control" unique_id=376336815]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("1_mbrec")
 script = ExtResource("2_tndjf")
 
