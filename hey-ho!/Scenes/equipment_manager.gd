@@ -15,6 +15,7 @@ enum TipoItem {
 
 @export_group("Referencias de Escena")
 @export var escena_resortera_3d: PackedScene
+@export var escena_roca_3d: PackedScene
 @export var escena_cana_pescar_3d: PackedScene
 @export var punto_mano_path: NodePath
 @export var trayectoria_path: NodePath
@@ -28,18 +29,26 @@ enum TipoItem {
 @export var impulso_vertical_max := 6.8
 @export var modo_resortera_inverso := true
 
+@export_group("Dinamica Piedra")
+@export var alcance_maximo_roca := 18.0
+@export var cooldown_roca := 0.35
+@export var radio_asistencia_loro := 1.4
+
 @export_group("Dinamica Cana de Pescar")
 @export var alcance_maximo_cana := 14.0
 @export var piedras_iniciales := 3
 
 var item_actual: TipoItem = TipoItem.NINGUNO
 var instancia_resortera: Node3D = null
+var instancia_roca: Node3D = null
 var instancia_cana: CanaPescar = null
 var esta_tensando: bool = false
 var piedras_disponibles: int = 0
 
 var _inicio_arrastre: Vector2 = Vector2.ZERO
 var _velocidad_tiro: Vector3 = Vector3.ZERO
+var _tiempo_ultimo_tiro_roca: float = -10.0
+var _textura_mira_roja: Texture2D = null
 
 @onready var _punto_mano: Node3D = get_node_or_null(punto_mano_path)
 @onready var _trayectoria: Node = get_node_or_null(trayectoria_path)
@@ -48,9 +57,14 @@ var _velocidad_tiro: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	add_to_group("equipment_manager")
-	piedras_disponibles = maxi(piedras_iniciales, 0)
-	piedras_cambiadas.emit(piedras_disponibles)
-	seleccionar_item(1)
+	if escena_roca_3d == null and ResourceLoader.exists("res://Scenes/piedra_pirata.tscn"):
+		escena_roca_3d = load("res://Scenes/piedra_pirata.tscn") as PackedScene
+	_crear_textura_mira_roja()
+	seleccionar_item(0)
+
+
+func _exit_tree() -> void:
+	Input.set_custom_mouse_cursor(null)
 
 
 func _process(_delta: float) -> void:
@@ -83,9 +97,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton and event.pressed:
+		# Disparo directo con un clic para la piedra (Slot 2).
 		if item_actual == TipoItem.ROCA and event.button_index == MOUSE_BUTTON_LEFT:
-			_intentar_lanzar_piedra(event.position)
-			get_viewport().set_input_as_handled()
+			_intentar_lanzar_roca_al_cursor(event.position)
 			return
 
 		# Lógica directa por clic para la caña de pescar (Slot 3).
@@ -105,6 +119,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func seleccionar_item(indice_slot: int) -> void:
 	_cancelar_tension()
 	item_actual = _convertir_slot_a_item(indice_slot)
+	_actualizar_cursor()
 	_actualizar_modelo_en_mano()
 
 
@@ -112,6 +127,111 @@ func _puede_usar_resortera() -> bool:
 	if _municion != null:
 		return _municion.tiene_prendas()
 	return true
+
+
+func _intentar_lanzar_roca_al_cursor(posicion_pantalla: Vector2) -> void:
+	var ahora := Time.get_ticks_msec() * 0.001
+	if ahora - _tiempo_ultimo_tiro_roca < cooldown_roca:
+		return
+
+	var camara: Camera3D = get_viewport().get_camera_3d()
+	if camara == null or _punto_mano == null:
+		return
+
+	_tiempo_ultimo_tiro_roca = ahora
+
+	var origen_rayo: Vector3 = camara.project_ray_origin(posicion_pantalla)
+	var direccion_rayo: Vector3 = camara.project_ray_normal(posicion_pantalla)
+	var destino_rayo: Vector3 = origen_rayo + direccion_rayo * 1000.0
+
+	var query := PhysicsRayQueryParameters3D.create(origen_rayo, destino_rayo)
+	query.collide_with_bodies = true
+	query.collide_with_areas = true
+	query.exclude = _obtener_rids_ignorados()
+
+	var resultado: Dictionary = camara.get_world_3d().direct_space_state.intersect_ray(query)
+	var punto_impacto: Vector3
+
+	if not resultado.is_empty():
+		punto_impacto = resultado["position"]
+	else:
+		var plano_nivel := Plane(Vector3.UP, _punto_mano.global_position.y + 0.6)
+		var interseccion: Variant = plano_nivel.intersects_ray(origen_rayo, direccion_rayo)
+		if interseccion == null:
+			return
+		punto_impacto = interseccion as Vector3
+
+	# Si el cursor apunta cerca de un loro, ajusta el impacto hacia su centro.
+	punto_impacto = _aplicar_asistencia_loro(origen_rayo, direccion_rayo, punto_impacto)
+
+	var origen_disparo := _obtener_origen_disparo()
+	var vector_hacia_objetivo: Vector3 = punto_impacto - origen_disparo
+	if vector_hacia_objetivo.length() > alcance_maximo_roca:
+		vector_hacia_objetivo = vector_hacia_objetivo.limit_length(alcance_maximo_roca)
+		punto_impacto = origen_disparo + vector_hacia_objetivo
+
+	var direccion_plana := Vector3(vector_hacia_objetivo.x, 0.0, vector_hacia_objetivo.z)
+	if direccion_plana.length_squared() > 0.0001:
+		_rotar_mano_hacia(direccion_plana.normalized())
+
+	var proyectil := RocaProyectil.new()
+	var colision := CollisionShape3D.new()
+	var esfera := SphereShape3D.new()
+	esfera.radius = 0.22
+	colision.shape = esfera
+	proyectil.add_child(colision)
+
+	if escena_roca_3d != null:
+		var visual_roca := escena_roca_3d.instantiate()
+		proyectil.add_child(visual_roca)
+
+	var jugador := _obtener_cuerpo_jugador()
+	if jugador != null:
+		proyectil.add_collision_exception_with(jugador)
+
+	var padre_mundo := get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	padre_mundo.add_child(proyectil)
+	proyectil.lanzar_hacia_punto(origen_disparo, punto_impacto)
+
+	_animar_lanzamiento_mano()
+	disparo_soltado.emit(proyectil.linear_velocity, TipoItem.ROCA)
+
+
+func _aplicar_asistencia_loro(origen_rayo: Vector3, direccion_rayo: Vector3, punto_fallback: Vector3) -> Vector3:
+	var mejor_punto := punto_fallback
+	var menor_distancia := radio_asistencia_loro
+
+	var candidatos: Array[Node] = []
+	candidatos.append_array(get_tree().get_nodes_in_group("loro"))
+	candidatos.append_array(get_tree().get_nodes_in_group("enemigo_loro"))
+
+	if candidatos.is_empty() and get_tree().current_scene != null:
+		for nodo in get_tree().current_scene.find_children("*Loro*", "Node3D", true, false):
+			candidatos.append(nodo)
+
+	for nodo in candidatos:
+		var loro_3d := nodo as Node3D
+		if loro_3d == null or not loro_3d.is_visible_in_tree():
+			continue
+		var pos_loro := loro_3d.global_position + Vector3(0.0, 0.25, 0.0)
+		var proyeccion := (pos_loro - origen_rayo).dot(direccion_rayo)
+		if proyeccion <= 0.0:
+			continue
+		var punto_cercano_rayo := origen_rayo + direccion_rayo * proyeccion
+		var dist := punto_cercano_rayo.distance_to(pos_loro)
+		if dist < menor_distancia:
+			menor_distancia = dist
+			mejor_punto = pos_loro
+
+	return mejor_punto
+
+
+func _animar_lanzamiento_mano() -> void:
+	if not is_instance_valid(instancia_roca):
+		return
+	instancia_roca.scale = Vector3.ONE * 0.2
+	var tween := create_tween()
+	tween.tween_property(instancia_roca, "scale", Vector3.ONE * 0.85, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _intentar_lanzar_cana_al_cursor(posicion_pantalla: Vector2) -> void:
@@ -155,22 +275,28 @@ func _intentar_lanzar_cana_al_cursor(posicion_pantalla: Vector2) -> void:
 	instancia_cana.lanzar_hacia_punto(punto_impacto, objeto_tocado)
 
 
+func _obtener_cuerpo_jugador() -> PhysicsBody3D:
+	if _punto_mano == null:
+		return null
+	var nodo_actual: Node = _punto_mano.get_parent()
+	while nodo_actual != null:
+		if nodo_actual is PhysicsBody3D:
+			return nodo_actual as PhysicsBody3D
+		nodo_actual = nodo_actual.get_parent()
+	return null
+
+
 func _obtener_rids_ignorados() -> Array[RID]:
 	var rids: Array[RID] = []
 	for nodo in get_tree().get_nodes_in_group("ignorar_trayectoria"):
 		if nodo is CollisionObject3D:
 			rids.append((nodo as CollisionObject3D).get_rid())
 
-	if _punto_mano != null:
-		var nodo_actual: Node = _punto_mano.get_parent()
-		while nodo_actual != null:
-			if nodo_actual is PhysicsBody3D:
-				var jugador := nodo_actual as PhysicsBody3D
-				rids.append(jugador.get_rid())
-				for hijo in jugador.find_children("*", "CollisionObject3D", true, false):
-					rids.append((hijo as CollisionObject3D).get_rid())
-				break
-			nodo_actual = nodo_actual.get_parent()
+	var jugador := _obtener_cuerpo_jugador()
+	if jugador != null:
+		rids.append(jugador.get_rid())
+		for hijo in jugador.find_children("*", "CollisionObject3D", true, false):
+			rids.append((hijo as CollisionObject3D).get_rid())
 
 	return rids
 
@@ -360,10 +486,45 @@ func _convertir_slot_a_item(indice_slot: int) -> TipoItem:
 			return TipoItem.NINGUNO
 
 
+func _actualizar_cursor() -> void:
+	if item_actual == TipoItem.ROCA and _textura_mira_roja != null:
+		Input.set_custom_mouse_cursor(_textura_mira_roja, Input.CURSOR_ARROW, Vector2(12, 12))
+	else:
+		Input.set_custom_mouse_cursor(null)
+
+
+func _crear_textura_mira_roja() -> void:
+	var tam := 24
+	var centro := Vector2(11.5, 11.5)
+	var img := Image.create(tam, tam, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+
+	var rojo := Color(0.95, 0.16, 0.16, 1.0)
+	var borde := Color(0.12, 0.02, 0.02, 0.85)
+
+	for y in tam:
+		for x in tam:
+			var d := Vector2(x, y).distance_to(centro)
+			var en_aro := d >= 7.2 and d <= 9.5
+			var en_cruz := (absf(x - centro.x) <= 1.0 and absf(y - centro.y) >= 3.0 and absf(y - centro.y) <= 10.5) \
+				or (absf(y - centro.y) <= 1.0 and absf(x - centro.x) >= 3.0 and absf(x - centro.x) <= 10.5)
+			var en_punto := d <= 1.6
+			if en_aro or en_cruz or en_punto:
+				img.set_pixel(x, y, rojo)
+			elif (d >= 6.4 and d <= 10.3):
+				img.set_pixel(x, y, borde)
+
+	_textura_mira_roja = ImageTexture.create_from_image(img)
+
+
 func _actualizar_modelo_en_mano() -> void:
 	if is_instance_valid(instancia_resortera):
 		instancia_resortera.queue_free()
 		instancia_resortera = null
+
+	if is_instance_valid(instancia_roca):
+		instancia_roca.queue_free()
+		instancia_roca = null
 
 	if is_instance_valid(instancia_cana):
 		instancia_cana.queue_free()
@@ -376,6 +537,13 @@ func _actualizar_modelo_en_mano() -> void:
 		instancia_resortera = escena_resortera_3d.instantiate()
 		_punto_mano.add_child(instancia_resortera)
 		_registrar_en_grupo_ignorar(instancia_resortera)
+
+	elif item_actual == TipoItem.ROCA and escena_roca_3d != null:
+		instancia_roca = escena_roca_3d.instantiate() as Node3D
+		if instancia_roca != null:
+			instancia_roca.scale = Vector3.ONE * 0.85
+			_punto_mano.add_child(instancia_roca)
+			_registrar_en_grupo_ignorar(instancia_roca)
 
 	elif item_actual == TipoItem.CANA_PESCAR and escena_cana_pescar_3d != null:
 		instancia_cana = escena_cana_pescar_3d.instantiate() as CanaPescar

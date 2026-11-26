@@ -24,12 +24,18 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 4
 	body_entered.connect(_on_body_entered)
+	_conectar_areas_agua()
 
 	_actualizar_visual_por_estado()
 
 	if tiempo_vida_segundos > 0.0:
 		var temporizador := get_tree().create_timer(tiempo_vida_segundos)
 		temporizador.timeout.connect(queue_free)
+
+
+func _physics_process(_delta: float) -> void:
+	if not _convertida and global_position.y < -0.45:
+		_caer_al_agua()
 
 
 func configurar_estado(nuevo_estado: EstadoPrenda) -> void:
@@ -41,8 +47,25 @@ func lanzar(velocidad_inicial: Vector3) -> void:
 	linear_velocity = velocidad_inicial
 
 
+func _conectar_areas_agua() -> void:
+	for nodo in get_tree().get_nodes_in_group("agua"):
+		if nodo is Area3D:
+			var area_agua := nodo as Area3D
+			if not area_agua.body_entered.is_connected(_on_area_agua_body_entered):
+				area_agua.body_entered.connect(_on_area_agua_body_entered)
+
+
+func _on_area_agua_body_entered(body: Node3D) -> void:
+	if not _convertida and body == self:
+		_caer_al_agua()
+
+
 func _on_body_entered(body: Node) -> void:
-	if _convertida:
+	if _convertida or body == null:
+		return
+
+	if _pertenece_a_grupo(body, "agua") or body.name.to_lower().contains("agua"):
+		_caer_al_agua()
 		return
 
 	# 1. Impacto contra estaciones o despacho (disparo del jugador)
@@ -51,7 +74,8 @@ func _on_body_entered(body: Node) -> void:
 			var estaciones := _obtener_estaciones_ropa()
 			if estaciones != null:
 				_convertida = true
-				estaciones.recibir_en_lavadora(int(estado))
+				var slot_lavadora := _obtener_slot_lavadora(body)
+				estaciones.recibir_en_lavadora(int(estado), slot_lavadora)
 				queue_free()
 			return
 
@@ -78,6 +102,27 @@ func _on_body_entered(body: Node) -> void:
 		var padre: Node = body.get_parent()
 		if body.name == "PlataformaCentral" or (padre != null and padre.name == "PlataformaCentral"):
 			_convertir_en_recolectable()
+
+
+func _obtener_slot_lavadora(nodo: Node) -> int:
+	var actual := nodo
+	while actual != null:
+		if actual.name == "LavadoraPirata2" or actual.name == "Lavadora2":
+			return 1
+		if actual.name == "LavadoraPirata" or actual.name == "Lavadora1":
+			return 0
+		actual = actual.get_parent()
+	return -1
+
+
+func _caer_al_agua() -> void:
+	if _convertida:
+		return
+	var estaciones := _obtener_estaciones_ropa()
+	if estaciones != null:
+		_convertida = true
+		estaciones.registrar_caida_al_agua(int(estado), global_position)
+		queue_free()
 
 
 func _pertenece_a_grupo(nodo: Node, grupo: String) -> bool:

@@ -38,6 +38,7 @@ const HOLD_RESCATE := 2.0                  # F mantenida para rescatar del agua
 # Colores: sucia = marrón, mojada = oscura, seca = crema, lista = verde.
 const COLOR_SUCIA := Color("8B5A2B")
 const COLOR_MOJADA := Color(0.18, 0.2, 0.3)
+const COLOR_LAVADA := Color(0.35, 0.72, 0.95)
 const COLOR_SECA := Color("F2E6C8")
 const COLOR_LISTO := Color("6FCF6F")
 
@@ -47,26 +48,33 @@ const LAVADA := 1
 const SECA := 2
 
 # ---------------------------------------------------------------- Dónde se dibujan (se pueden mover en el Inspector)
-# Las lavadoras del mapa de Isabella están en x = 2.06 y x = 3.98 (z = -2.9); los ganchos en x = 5, 6, 7 (z = 2.9).
 @export var pos_lavadora: Array[Vector3] = [Vector3(2.06, 0.75, -2.9), Vector3(3.98, 0.75, -2.9)]
 @export var pos_ganchos: Array[Vector3] = [Vector3(5, 0.35, 2.9), Vector3(6, 0.35, 2.9), Vector3(7, 0.35, 2.9)]
-@export var pos_agua_lavadora := Vector3(3.0, -0.9, -1.9)
-@export var pos_agua_tendedero := Vector3(6.0, -0.9, 3.9)
+@export var pos_agua_lavadora := Vector3(1.2, 0.06, -1.6)
+@export var pos_agua_tendedero := Vector3(6.0, 0.06, 3.9)
+@export var altura_superficie_agua := 0.06
 ## Para demos: 2.0 = lavar y secar al doble de rápido (no cambia los tiempos de rescate ni de jalar).
 @export var velocidad_proceso := 1.0
 
 # ---------------------------------------------------------------- Estado
-## Prendas secas que lleva el pirata hacia el despacho (las sucias y lavadas viajan en la cola de munición).
 var secas := 0
 
 var lavadora: Array = [null, null]           # cada espacio: null (libre) o {t, listo, nodo, barra}
 var tendedero: Array = [null, null, null]    # cada gancho: null (libre) o {t, seca, nodo, barra}
-var charcos: Array = []                      # prendas en el agua: {t, estado, nodo}
+var charcos: Array = []                      # prendas en el agua: {t, estado, nodo, flotador}
 
 var progreso_jalar := 0.0                    # cuánto lleva la E mantenida (0 a HOLD_JALAR)
 var progreso_rescate := 0.0                  # cuánto lleva la F mantenida (0 a HOLD_RESCATE)
 var _jalar_hecho := false                    # evita recoger otra prenda sin soltar la tecla
 var _rescate_hecho := false
+var _altura_agua_detectada: float = NAN
+
+
+func _ready() -> void:
+	if get_tree().current_scene != null:
+		var nodo_agua := get_tree().current_scene.find_child("Agua", true, false) as Node3D
+		if nodo_agua != null:
+			_altura_agua_detectada = nodo_agua.global_position.y + 0.06
 
 
 func _process(delta: float) -> void:
@@ -102,12 +110,20 @@ func avanzar(delta: float) -> void:
 			_pintar(s.nodo, COLOR_SECA)
 			_quitar_barra(s)
 			prenda_seca.emit(g)
-	# Agua: el anillo se va encogiendo; a los 8 s la prenda se pierde.
+	# Agua: el anillo se mantiene visible los 8 s completos y parpadea en los últimos 2 s.
 	for c in charcos.duplicate():
 		c.t += delta
-		var u: float = 1.0 - c.t / T_RESCATE
+		var restante: float = T_RESCATE - c.t
 		if is_instance_valid(c.nodo):
-			c.nodo.scale = Vector3(1, 1, 1) * maxf(0.2, u + 0.2)
+			var pulso: float = 1.0 + 0.1 * sin(c.t * 5.5)
+			c.nodo.scale = Vector3(pulso, 1.0, pulso)
+			if restante <= 2.0:
+				c.nodo.visible = int(floor(c.t * 10.0)) % 2 == 0
+			else:
+				c.nodo.visible = true
+			if c.has("flotador") and is_instance_valid(c.flotador):
+				(c.flotador as Node3D).position.y = 0.14 + 0.04 * sin(c.t * 4.0)
+				(c.flotador as Node3D).rotation.y = c.t * 1.2
 		if c.t >= T_RESCATE:
 			_quitar_charco(c)
 			prenda_perdida.emit(c.estado)
@@ -116,14 +132,26 @@ func avanzar(delta: float) -> void:
 # ---------------------------------------------------------------- Reparto de prendas
 ## Tiro a la IZQUIERDA con una prenda en `estado`. Devuelve true si la lavadora la aceptó.
 ## Solo se lava lo que no está seco; si la lavadora está llena (o la prenda ya está seca) cae al agua.
-func recibir_en_lavadora(estado: int = SUCIA) -> bool:
-	var libre := lavadora.find(null)          # primer espacio libre, o -1 si está llena
+func recibir_en_lavadora(estado: int = SUCIA, slot_objetivo: int = -1) -> bool:
+	var libre := -1
+	if slot_objetivo >= 0 and slot_objetivo < CAPACIDAD_LAVADORA:
+		if lavadora[slot_objetivo] == null:
+			libre = slot_objetivo
+	else:
+		libre = lavadora.find(null)
+
 	if libre == -1 or estado == SECA:
-		_al_agua(estado, pos_agua_lavadora)
+		_al_agua(estado, to_global(_obtener_pos_agua_lavadora(slot_objetivo)))
 		return false
 	lavadora[libre] = _nueva(libre, pos_lavadora, COLOR_SUCIA)
 	prenda_lavando.emit(libre)
 	return true
+
+
+func _obtener_pos_agua_lavadora(slot_objetivo: int) -> Vector3:
+	if slot_objetivo == 1 and pos_lavadora.size() > 1:
+		return Vector3(pos_lavadora[1].x + 0.86, pos_agua_lavadora.y, pos_agua_lavadora.z)
+	return pos_agua_lavadora
 
 
 ## Tiro a la DERECHA con una prenda en `estado`. Solo se tienden prendas LAVADAS:
@@ -131,15 +159,19 @@ func recibir_en_lavadora(estado: int = SUCIA) -> bool:
 func recibir_en_tendedero(estado: int = LAVADA) -> bool:
 	var libre := tendedero.find(null)
 	if estado != LAVADA or libre == -1:
-		_al_agua(estado, pos_agua_tendedero)
+		_al_agua(estado, to_global(pos_agua_tendedero))
 		return false
 	tendedero[libre] = _nueva(libre, pos_ganchos, COLOR_MOJADA)
 	prenda_tendida.emit(libre)                # el NivelControlador avisa al loro con esto
 	return true
 
 
+## Punto único de entrada cuando un proyectil de prenda cae directo al mar.
+func registrar_caida_al_agua(estado: int, posicion_global: Vector3) -> void:
+	_al_agua(estado, posicion_global)
+
+
 # ---------------------------------------------------------------- Recoger prendas (E mantenida)
-## ¿Hay alguna prenda lista para recoger en esa estación? ("lavadora" o "tendedero")
 func hay_para_jalar(sitio: String) -> bool:
 	var lista := lavadora if sitio == "lavadora" else tendedero
 	for s in lista:
@@ -148,40 +180,37 @@ func hay_para_jalar(sitio: String) -> bool:
 	return false
 
 
-## Se llama cada fotograma con E mantenida junto a la estación. Devuelve true cuando recoge una prenda.
 func jalar(sitio: String, delta: float) -> bool:
 	if _jalar_hecho or not hay_para_jalar(sitio):
 		progreso_jalar = 0.0
 		return false
 	progreso_jalar += delta
 	if progreso_jalar < HOLD_JALAR:
-		return false                         # todavía no completa 1 s
+		return false
 	progreso_jalar = 0.0
-	_jalar_hecho = true                      # hasta soltar la tecla, no recoge otra
+	_jalar_hecho = true
 	if sitio == "lavadora":
 		for i in CAPACIDAD_LAVADORA:
 			if lavadora[i] != null and lavadora[i].listo:
 				_liberar(lavadora, i)
-				break                         # el controlador agrega la prenda LAVADA a la munición
+				break
 	else:
 		for g in GANCHOS:
 			if tendedero[g] != null and tendedero[g].seca:
 				_liberar(tendedero, g)
 				secas += 1
-				prenda_retirada.emit(g)       # avisa al loro: ya no hay prenda en ese gancho
+				prenda_retirada.emit(g)
 				break
 	_avisar_mano()
 	return true
 
 
-## Al soltar la E se reinicia el progreso y se permite recoger otra.
 func soltar_jalar() -> void:
 	progreso_jalar = 0.0
 	_jalar_hecho = false
 
 
 # ---------------------------------------------------------------- Rescate del agua (F mantenida)
-## Se llama cada fotograma con F mantenida junto al agua. Devuelve true cuando rescata una prenda.
 func rescatar(delta: float) -> bool:
 	if _rescate_hecho or charcos.is_empty():
 		progreso_rescate = 0.0
@@ -191,9 +220,9 @@ func rescatar(delta: float) -> bool:
 		return false
 	progreso_rescate = 0.0
 	_rescate_hecho = true
-	var c = charcos[0]                       # la que lleva más tiempo (la que se pierde primero)
+	var c = charcos[0]
 	_quitar_charco(c)
-	prenda_rescatada.emit(c.estado)         # el controlador la devuelve a la munición con su estado
+	prenda_rescatada.emit(c.estado)
 	return true
 
 
@@ -203,7 +232,6 @@ func soltar_rescate() -> void:
 
 
 # ---------------------------------------------------------------- Loro y entrega
-## El loro se llevó la prenda de ese gancho: desaparece del tendedero.
 func robar(gancho: int) -> bool:
 	if gancho < 0 or gancho >= GANCHOS or tendedero[gancho] == null:
 		return false
@@ -212,7 +240,6 @@ func robar(gancho: int) -> bool:
 	return true
 
 
-## Entrega en el despacho. Devuelve cuántas prendas secas se llevó (máximo `maximo`).
 func entregar(maximo: int) -> int:
 	var n := mini(secas, maximo)
 	secas -= n
@@ -220,7 +247,6 @@ func entregar(maximo: int) -> int:
 	return n
 
 
-## Deja todo vacío (para empezar un nivel limpio).
 func reiniciar() -> void:
 	for i in CAPACIDAD_LAVADORA:
 		if lavadora[i] != null:
@@ -236,7 +262,6 @@ func reiniciar() -> void:
 	_avisar_mano()
 
 
-## Cuántas prendas hay ahora en cada estación.
 func en_lavadora() -> int:
 	return CAPACIDAD_LAVADORA - lavadora.count(null)
 
@@ -250,7 +275,6 @@ func _avisar_mano() -> void:
 	mano_cambio.emit(secas)
 
 
-## Crea la prenda (una caja plana de color) en su espacio y devuelve sus datos.
 func _nueva(i: int, posiciones: Array[Vector3], color: Color) -> Dictionary:
 	var m := MeshInstance3D.new()
 	var caja := BoxMesh.new()
@@ -262,7 +286,6 @@ func _nueva(i: int, posiciones: Array[Vector3], color: Color) -> Dictionary:
 	return {"t": 0.0, "listo": false, "seca": false, "nodo": m, "barra": null}
 
 
-## Quita la prenda de su espacio (y su barra) y deja el espacio libre.
 func _liberar(lista: Array, i: int) -> void:
 	var s = lista[i]
 	if s == null:
@@ -273,19 +296,58 @@ func _liberar(lista: Array, i: int) -> void:
 	lista[i] = null
 
 
-## Pone una prenda en el agua: dibuja un anillo amarillo que se encoge durante 8 s.
-func _al_agua(estado: int, pos: Vector3) -> void:
-	var m := MeshInstance3D.new()
-	var d := CylinderMesh.new()
-	d.top_radius = 0.6
-	d.bottom_radius = 0.6
-	d.height = 0.03
-	m.mesh = d
-	m.position = pos
-	add_child(m)
-	_pintar(m, Color(1.0, 0.85, 0.2, 0.7))
-	charcos.append({"t": 0.0, "estado": estado, "nodo": m})
+func _obtener_altura_superficie() -> float:
+	if not is_nan(_altura_agua_detectada):
+		return _altura_agua_detectada
+	return global_position.y + altura_superficie_agua
+
+
+## Crea un aro amarillo brillante sobre la superficie del agua con la prenda flotando en el centro.
+func _al_agua(estado: int, pos_global: Vector3) -> void:
+	var raiz_charco := Node3D.new()
+	add_child(raiz_charco)
+	raiz_charco.global_position = Vector3(pos_global.x, _obtener_altura_superficie(), pos_global.z)
+
+	# 1. Aro exterior amarillo brillante (unshaded para que nunca lo oscurezcan sombras)
+	var aro := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.55
+	torus.outer_radius = 0.80
+	aro.mesh = torus
+	raiz_charco.add_child(aro)
+	_pintar_unshaded(aro, Color(1.0, 0.88, 0.15, 0.96))
+
+	# 2. Relleno interior translúcido
+	var disco := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.55
+	cyl.bottom_radius = 0.55
+	cyl.height = 0.02
+	disco.mesh = cyl
+	raiz_charco.add_child(disco)
+	_pintar_unshaded(disco, Color(1.0, 0.90, 0.30, 0.30))
+
+	# 3. Prenda flotando encima con el color de su estado (sucia, lavada o seca)
+	var flotador := MeshInstance3D.new()
+	var caja := BoxMesh.new()
+	caja.size = Vector3(0.46, 0.14, 0.42)
+	flotador.mesh = caja
+	flotador.position = Vector3(0.0, 0.14, 0.0)
+	raiz_charco.add_child(flotador)
+	_pintar(flotador, _color_por_estado(estado))
+
+	charcos.append({"t": 0.0, "estado": estado, "nodo": raiz_charco, "flotador": flotador})
 	prenda_al_agua.emit(estado)
+
+
+func _color_por_estado(estado: int) -> Color:
+	match estado:
+		LAVADA:
+			return COLOR_LAVADA
+		SECA:
+			return COLOR_SECA
+		_:
+			return COLOR_SUCIA
 
 
 func _quitar_charco(c: Dictionary) -> void:
@@ -294,7 +356,6 @@ func _quitar_charco(c: Dictionary) -> void:
 	charcos.erase(c)
 
 
-## Barra de progreso amarilla sobre la prenda (lavado o secado); `u` va de 0 a 1.
 func _barra(s: Dictionary, u: float) -> void:
 	if s.barra == null:
 		var b := MeshInstance3D.new()
@@ -314,9 +375,17 @@ func _quitar_barra(s: Dictionary) -> void:
 	s.barra = null
 
 
-## Le pone color a una malla (con transparencia si el color la trae).
 func _pintar(m: MeshInstance3D, color: Color) -> void:
 	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	if color.a < 1.0:
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.material_override = mat
+
+
+func _pintar_unshaded(m: MeshInstance3D, color: Color) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = color
 	if color.a < 1.0:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
