@@ -4,6 +4,7 @@ class_name EquipmentManager
 signal disparo_soltado(velocidad: Vector3, tipo_item: TipoItem)
 signal tension_cambiada(fraccion: float)
 signal piedras_cambiadas(cantidad: int)
+signal item_cambiado(item: int)
 
 enum TipoItem {
 	NINGUNO,
@@ -57,10 +58,12 @@ var _textura_mira_roja: Texture2D = null
 
 func _ready() -> void:
 	add_to_group("equipment_manager")
+	piedras_disponibles = maxi(piedras_iniciales, 0)
+	piedras_cambiadas.emit(piedras_disponibles)
 	if escena_roca_3d == null and ResourceLoader.exists("res://Scenes/piedra_pirata.tscn"):
 		escena_roca_3d = load("res://Scenes/piedra_pirata.tscn") as PackedScene
 	_crear_textura_mira_roja()
-	seleccionar_item(0)
+	seleccionar_item(1)
 
 
 func _exit_tree() -> void:
@@ -119,6 +122,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func seleccionar_item(indice_slot: int) -> void:
 	_cancelar_tension()
 	item_actual = _convertir_slot_a_item(indice_slot)
+	item_cambiado.emit(item_actual)
 	_actualizar_cursor()
 	_actualizar_modelo_en_mano()
 

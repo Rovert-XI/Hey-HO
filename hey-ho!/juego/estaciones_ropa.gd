@@ -97,6 +97,7 @@ func avanzar(delta: float) -> void:
 			s.nodo.scale = Vector3.ONE * 1.25
 			_pintar(s.nodo, COLOR_LISTO)
 			_quitar_barra(s)
+			_mostrar_icono_listo(s)
 			prenda_lavada.emit(i)
 	# Tendedero: igual, pero a los 15 s la prenda pasa de oscura (mojada) a crema (seca).
 	for g in GANCHOS:
@@ -109,6 +110,7 @@ func avanzar(delta: float) -> void:
 			s.seca = true
 			_pintar(s.nodo, COLOR_SECA)
 			_quitar_barra(s)
+			_mostrar_icono_listo(s)
 			prenda_seca.emit(g)
 	# Agua: el anillo se mantiene visible los 8 s completos y parpadea en los últimos 2 s.
 	for c in charcos.duplicate():
@@ -143,7 +145,7 @@ func recibir_en_lavadora(estado: int = SUCIA, slot_objetivo: int = -1) -> bool:
 	if libre == -1 or estado == SECA:
 		_al_agua(estado, to_global(_obtener_pos_agua_lavadora(slot_objetivo)))
 		return false
-	lavadora[libre] = _nueva(libre, pos_lavadora, COLOR_SUCIA)
+	lavadora[libre] = _nueva(libre, pos_lavadora, COLOR_SUCIA, Vector3(0.0, 0.87, -0.36))
 	prenda_lavando.emit(libre)
 	return true
 
@@ -275,7 +277,8 @@ func _avisar_mano() -> void:
 	mano_cambio.emit(secas)
 
 
-func _nueva(i: int, posiciones: Array[Vector3], color: Color) -> Dictionary:
+func _nueva(i: int, posiciones: Array[Vector3], color: Color,
+		desplazamiento_barra := Vector3(0.0, 0.45, 0.0)) -> Dictionary:
 	var m := MeshInstance3D.new()
 	var caja := BoxMesh.new()
 	caja.size = Vector3(0.5, 0.45, 0.08)
@@ -283,7 +286,15 @@ func _nueva(i: int, posiciones: Array[Vector3], color: Color) -> Dictionary:
 	m.position = posiciones[i]
 	add_child(m)
 	_pintar(m, color)
-	return {"t": 0.0, "listo": false, "seca": false, "nodo": m, "barra": null}
+	return {
+		"t": 0.0,
+		"listo": false,
+		"seca": false,
+		"nodo": m,
+		"barra": null,
+		"icono_listo": null,
+		"desplazamiento_barra": desplazamiento_barra,
+	}
 
 
 func _liberar(lista: Array, i: int) -> void:
@@ -291,6 +302,7 @@ func _liberar(lista: Array, i: int) -> void:
 	if s == null:
 		return
 	_quitar_barra(s)
+	_quitar_icono_listo(s)
 	if is_instance_valid(s.nodo):
 		s.nodo.queue_free()
 	lista[i] = null
@@ -358,21 +370,62 @@ func _quitar_charco(c: Dictionary) -> void:
 
 func _barra(s: Dictionary, u: float) -> void:
 	if s.barra == null:
-		var b := MeshInstance3D.new()
-		var caja := BoxMesh.new()
-		caja.size = Vector3(0.5, 0.06, 0.06)
-		b.mesh = caja
-		s.nodo.add_child(b)
-		b.position = Vector3(0, 0.4, 0)
-		_pintar(b, Color("F2C94C"))
-		s.barra = b
-	s.barra.scale.x = clampf(u, 0.02, 1.0)
+		var contenedor := Node3D.new()
+		contenedor.name = "BarraProgreso"
+		contenedor.position = s.nodo.position + s.desplazamiento_barra
+		add_child(contenedor)
+
+		var fondo := MeshInstance3D.new()
+		var caja_fondo := BoxMesh.new()
+		caja_fondo.size = Vector3(0.9, 0.12, 0.06)
+		fondo.mesh = caja_fondo
+		_pintar_unshaded(fondo, Color("#172538"))
+		contenedor.add_child(fondo)
+
+		var relleno := MeshInstance3D.new()
+		var caja_relleno := BoxMesh.new()
+		caja_relleno.size = Vector3(0.82, 0.07, 0.08)
+		relleno.mesh = caja_relleno
+		relleno.position = Vector3(-0.41, 0.0, 0.04)
+		_pintar_unshaded(relleno, Color("#F2C94C"))
+		contenedor.add_child(relleno)
+		s.barra = {"nodo": contenedor, "relleno": relleno}
+
+	var fraccion := clampf(u, 0.02, 1.0)
+	var relleno_actual: MeshInstance3D = s.barra.relleno
+	relleno_actual.scale.x = fraccion
+	relleno_actual.position.x = -0.41 * (1.0 - fraccion)
 
 
 func _quitar_barra(s: Dictionary) -> void:
-	if s.barra != null and is_instance_valid(s.barra):
-		s.barra.queue_free()
+	if s.barra != null and is_instance_valid(s.barra.nodo):
+		s.barra.nodo.queue_free()
 	s.barra = null
+
+
+func _mostrar_icono_listo(s: Dictionary) -> void:
+	var icono := Label3D.new()
+	icono.name = "IndicadorRopaLista"
+	icono.text = "!"
+	icono.font_size = 96
+	icono.pixel_size = 0.008
+	icono.modulate = Color("#FF9F43")
+	icono.outline_size = 14
+	icono.outline_modulate = Color("#172538")
+	icono.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	icono.no_depth_test = true
+	icono.position = s.nodo.position + s.desplazamiento_barra + Vector3(0.0, 0.32, 0.0)
+	add_child(icono)
+	s.icono_listo = icono
+	var tween := create_tween().bind_node(icono).set_loops()
+	tween.tween_property(icono, "position:y", icono.position.y + 0.22, 0.24).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(icono, "position:y", icono.position.y, 0.24).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+
+func _quitar_icono_listo(s: Dictionary) -> void:
+	if s.icono_listo != null and is_instance_valid(s.icono_listo):
+		s.icono_listo.queue_free()
+	s.icono_listo = null
 
 
 func _pintar(m: MeshInstance3D, color: Color) -> void:

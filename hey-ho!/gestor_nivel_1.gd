@@ -7,6 +7,7 @@ const PRENDAS_POR_CLIENTE := 2
 const ORO_POR_PEDIDO := 30
 const ORO_MAXIMO := 90
 const ORO_MINIMO_APROBAR := 54
+const ESCENA_PAUSA: PackedScene = preload("res://juego/pausa.tscn")
 
 @export var duracion_nivel := 150.0
 @export var intervalo_barcos := 35.0
@@ -19,6 +20,7 @@ const ORO_MINIMO_APROBAR := 54
 var _estaciones: EstacionesRopa
 var _despacho: Node3D
 var _municion: MunicionManager
+var _equipo: EquipmentManager
 var _jugador: Node3D
 var _loro: Node3D
 
@@ -33,27 +35,31 @@ var _secas_previas: int = 0
 var _barcos_activos: Array[BarcoCliente] = []
 var _puntos_muelle: Array[Vector3] = []
 
-var _hud_layer: CanvasLayer
-var _label_tiempo: Label
-var _label_oro: Label
-var _label_clientes: Label
-var _label_aviso: Label
-var _panel_final: PanelContainer
-var _label_resultado_titulo: Label
-var _label_resultado_detalle: Label
+var _hud: HudHeyHo
+var _menu_pausa: MenuPausa
+var _pausa_abierta := false
+var _interfaz_lista := false
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("gestor_nivel")
+	EstadoJuego.asegurar_carga()
 	_tiempo_restante = duracion_nivel
 
 	var raiz := get_tree().current_scene
 	if raiz == null:
 		return
 
+	_hud = raiz.find_child("Hud", true, false) as HudHeyHo
+	if _hud == null:
+		push_error("GestorNivel1: no se encontró el HUD HudHeyHo en la escena activa.")
+		return
+
 	_estaciones = raiz.find_child("EstacionesRopa", true, false) as EstacionesRopa
 	_despacho = raiz.find_child("PlataformaDespacho", true, false) as Node3D
 	_municion = raiz.find_child("MunicionManager", true, false) as MunicionManager
+	_equipo = raiz.find_child("EquipmentManager", true, false) as EquipmentManager
 	_jugador = raiz.find_child("CharacterBody3D2", true, false) as Node3D
 	if _jugador == null:
 		_jugador = raiz.find_child("PlayerPirata", true, false) as Node3D
@@ -70,8 +76,22 @@ func _ready() -> void:
 			_estaciones.mano_cambio.connect(_on_mano_cambio)
 
 	_conectar_loro_carlos(raiz)
-	_construir_hud_jornada()
+	_inicializar_interfaz.call_deferred()
+
+
+func _inicializar_interfaz() -> void:
+	_hud.configurar_jornada(duracion_nivel, TOTAL_CLIENTES, ORO_MAXIMO, ORO_MINIMO_APROBAR)
+	_hud.pausa_solicitada.connect(_abrir_pausa)
+	if _equipo != null:
+		_equipo.item_cambiado.connect(_al_cambiar_item)
+		_equipo.tension_cambiada.connect(_hud.set_carga)
+		_equipo.piedras_cambiadas.connect(_hud.set_piedras)
+		_al_cambiar_item(_equipo.item_actual)
+		_hud.set_piedras(_equipo.piedras_disponibles)
+	_montar_menu_pausa(get_tree().current_scene)
+	_interfaz_lista = true
 	_actualizar_hud()
+	_mostrar_aviso("Atiende los 3 barcos antes de que termine el turno.")
 
 
 func _conectar_loro_carlos(raiz: Node) -> void:
@@ -178,7 +198,7 @@ func _calcular_puntos_muelle(raiz: Node) -> void:
 
 
 func _process(delta: float) -> void:
-	if _nivel_terminado:
+	if not _interfaz_lista or _nivel_terminado or get_tree().paused:
 		return
 
 	_tiempo_transcurrido += delta
@@ -193,6 +213,72 @@ func _process(delta: float) -> void:
 
 	if _tiempo_restante <= 0.0 or (_barcos_generados >= TOTAL_CLIENTES and _barcos_finalizados >= TOTAL_CLIENTES):
 		_finalizar_nivel()
+
+
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE):
+		return
+	if _nivel_terminado:
+		return
+
+	if _pausa_abierta:
+		_reanudar_desde_pausa()
+	else:
+		_abrir_pausa()
+	get_viewport().set_input_as_handled()
+
+
+func _montar_menu_pausa(raiz: Node) -> void:
+	var capa := CanvasLayer.new()
+	capa.name = "CapaPausaNivel1"
+	capa.layer = 20
+	capa.process_mode = Node.PROCESS_MODE_ALWAYS
+	raiz.add_child(capa)
+
+	_menu_pausa = ESCENA_PAUSA.instantiate() as MenuPausa
+	_menu_pausa.hide()
+	capa.add_child(_menu_pausa)
+	_menu_pausa.continuar.connect(_reanudar_desde_pausa)
+	_menu_pausa.reiniciar.connect(_reiniciar_desde_pausa)
+	_menu_pausa.volver_al_menu.connect(_volver_al_menu_desde_pausa)
+
+
+func _abrir_pausa() -> void:
+	if _nivel_terminado or _pausa_abierta:
+		return
+	_pausa_abierta = true
+	_menu_pausa.mostrar_menu()
+	get_tree().paused = true
+
+
+func _reanudar_desde_pausa() -> void:
+	_pausa_abierta = false
+	get_tree().paused = false
+	_menu_pausa.hide()
+
+
+func _reiniciar_desde_pausa() -> void:
+	_pausa_abierta = false
+	get_tree().paused = false
+	Navegador.ir_a(self, EstadoJuego.RUTA_NIVEL)
+
+
+func _volver_al_menu_desde_pausa() -> void:
+	_pausa_abierta = false
+	get_tree().paused = false
+	Navegador.ir_a(self, Navegador.MENU)
+
+
+func _al_cambiar_item(item: int) -> void:
+	match item:
+		EquipmentManager.TipoItem.RESORTERA:
+			_hud.equipar("resortera")
+		EquipmentManager.TipoItem.ROCA:
+			_hud.equipar("piedra")
+		EquipmentManager.TipoItem.CANA_PESCAR:
+			_hud.equipar("cana")
+		_:
+			_hud.equipar("")
 
 
 func _generar_barco_cliente(numero: int) -> void:
@@ -279,6 +365,7 @@ func _on_barco_pedido_completado(barco: BarcoCliente, oro_ganado: int) -> void:
 	_clientes_atendidos += 1
 	_barcos_finalizados += 1
 	_barcos_activos.erase(barco)
+	_hud.mostrar_pago(oro_ganado)
 	_mostrar_aviso("Barco #" + str(barco.numero_cliente) + " completado: +" + str(oro_ganado) + " oro.")
 	_actualizar_hud()
 
@@ -310,88 +397,17 @@ func _finalizar_nivel() -> void:
 	if _nivel_terminado:
 		return
 	_nivel_terminado = true
-
-	var aprobado: bool = _oro_actual >= ORO_MINIMO_APROBAR
-	_label_resultado_titulo.text = "NIVEL 1 SUPERADO" if aprobado else "TURNO TERMINADO - ORO INSUFICIENTE"
-	_label_resultado_detalle.text = (
-		"Oro obtenido: " + str(_oro_actual) + " / " + str(ORO_MAXIMO) + " (Mínimo requerido: " + str(ORO_MINIMO_APROBAR) + ")\n" +
-		"Pedidos completados: " + str(_clientes_atendidos) + " / " + str(TOTAL_CLIENTES)
-	)
-	_panel_final.visible = true
-
-
-func _construir_hud_jornada() -> void:
-	_hud_layer = CanvasLayer.new()
-	_hud_layer.layer = 20
-	add_child(_hud_layer)
-
-	var barra_top := PanelContainer.new()
-	barra_top.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	barra_top.offset_left = 16
-	barra_top.offset_top = 12
-	barra_top.offset_right = -16
-	barra_top.offset_bottom = 56
-	_hud_layer.add_child(barra_top)
-
-	var hbox := HBoxContainer.new()
-	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 36)
-	barra_top.add_child(hbox)
-
-	_label_tiempo = Label.new()
-	hbox.add_child(_label_tiempo)
-
-	_label_oro = Label.new()
-	hbox.add_child(_label_oro)
-
-	_label_clientes = Label.new()
-	hbox.add_child(_label_clientes)
-
-	_label_aviso = Label.new()
-	_label_aviso.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_label_aviso.offset_top = -115
-	_label_aviso.offset_bottom = -85
-	_label_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label_aviso.text = "Nivel 1: Atiende los 3 barcos antes de que termine el turno."
-	_hud_layer.add_child(_label_aviso)
-
-	_panel_final = PanelContainer.new()
-	_panel_final.set_anchors_preset(Control.PRESET_CENTER)
-	_panel_final.custom_minimum_size = Vector2(440, 210)
-	_panel_final.offset_left = -220
-	_panel_final.offset_top = -105
-	_panel_final.offset_right = 220
-	_panel_final.offset_bottom = 105
-	_panel_final.visible = false
-	_hud_layer.add_child(_panel_final)
-
-	var vbox_final := VBoxContainer.new()
-	vbox_final.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox_final.add_theme_constant_override("separation", 14)
-	_panel_final.add_child(vbox_final)
-
-	_label_resultado_titulo = Label.new()
-	_label_resultado_titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox_final.add_child(_label_resultado_titulo)
-
-	_label_resultado_detalle = Label.new()
-	_label_resultado_detalle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox_final.add_child(_label_resultado_detalle)
-
-	var btn_reintentar := Button.new()
-	btn_reintentar.text = "Reintentar Nivel 1"
-	btn_reintentar.pressed.connect(func() -> void: get_tree().reload_current_scene())
-	vbox_final.add_child(btn_reintentar)
+	EstadoJuego.nivel_actual = 1
+	EstadoJuego.terminar_nivel(1, _oro_actual, _clientes_atendidos, TOTAL_CLIENTES)
+	Navegador.ir_a(self, Navegador.RESULTADO)
 
 
 func _actualizar_hud() -> void:
-	var mins: int = floori(_tiempo_restante / 60.0)
-	var segs: int = int(_tiempo_restante) % 60
-	_label_tiempo.text = "Tiempo: %02d:%02d" % [mins, segs]
-	_label_oro.text = "Oro: " + str(_oro_actual) + " / " + str(ORO_MAXIMO) + " (Meta: " + str(ORO_MINIMO_APROBAR) + ")"
-	_label_clientes.text = "Barcos: " + str(_clientes_atendidos) + " / " + str(TOTAL_CLIENTES)
+	_hud.set_tiempo(_tiempo_restante)
+	_hud.set_oro(_oro_actual)
+	_hud.set_barcos(_clientes_atendidos, TOTAL_CLIENTES)
 
 
 func _mostrar_aviso(texto: String) -> void:
-	if is_instance_valid(_label_aviso):
-		_label_aviso.text = texto
+	if is_instance_valid(_hud):
+		_hud.mostrar_aviso(texto)

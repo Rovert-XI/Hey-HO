@@ -29,7 +29,7 @@ func _ready() -> void:
 	_actualizar_visual_por_estado()
 
 	if tiempo_vida_segundos > 0.0:
-		var temporizador := get_tree().create_timer(tiempo_vida_segundos)
+		var temporizador := get_tree().create_timer(tiempo_vida_segundos, false)
 		temporizador.timeout.connect(queue_free)
 
 

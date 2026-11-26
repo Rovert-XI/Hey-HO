@@ -2,6 +2,7 @@
 
 [ext_resource type="Theme" uid="uid://bhj7noge3nsmk" path="res://tema/heyho_tema.tres" id="2_h8aq7"]
 [ext_resource type="Script" uid="uid://d1df3nus1n8lr" path="res://juego/hud.gd" id="3_compacto"]
+[ext_resource type="Texture2D" uid="uid://b6dop6exhix6f" path="res://Assets/estrella.png" id="3_ydu1q"]
 [ext_resource type="Texture2D" uid="uid://dl0sopwxj0j5n" path="res://Assets/Cuadros_Inventario/BttnResortera/normal.png" id="4_resortera"]
 [ext_resource type="Texture2D" uid="uid://bx6u2tluttwhb" path="res://Assets/Cuadros_Inventario/BttnPiedra/normal.png" id="5_piedra"]
 [ext_resource type="Texture2D" uid="uid://cd2li2ndmfr0r" path="res://Assets/Cuadros_Inventario/BttnCanaPescar/normal.png" id="6_cana"]
@@ -24,23 +25,6 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0, 0, 0, 0.25)
 shadow_size = 3
 shadow_offset = Vector2(0, 2)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lwl6e"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.9647059, 0.90588236, 0.6901961, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-corner_detail = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
 content_margin_left = 6.0
@@ -100,6 +84,14 @@ theme_override_constants/margin_right = 12
 layout_mode = 2
 mouse_filter = 2
 
+[node name="BotonPausa" type="Button" parent="Raiz/Superior/FilaSuperior" unique_id=2035053462]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+tooltip_text = "Pausa (Esc)"
+theme_override_font_sizes/font_size = 14
+text = "||"
+
 [node name="PanelOro" type="PanelContainer" parent="Raiz/Superior/FilaSuperior" unique_id=952389861]
 layout_mode = 2
 mouse_filter = 2
@@ -116,19 +108,17 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 6
 
-[node name="Moneda" type="Panel" parent="Raiz/Superior/FilaSuperior/PanelOro/ColumnaOro/FilaOro" unique_id=846698340]
-custom_minimum_size = Vector2(18, 18)
+[node name="Moneda" type="TextureRect" parent="Raiz/Superior/FilaSuperior/PanelOro/ColumnaOro/FilaOro" unique_id=1570613469]
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_lwl6e")
+texture = ExtResource("3_ydu1q")
+expand_mode = 3
 
 [node name="Oro" type="Label" parent="Raiz/Superior/FilaSuperior/PanelOro/ColumnaOro/FilaOro" unique_id=2035053453]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"LabelOro"
 theme_override_font_sizes/font_size = 18
-text = "0"
+text = "Oro: 0 / 90"
 
 [node name="ContenedorBarraOro" type="Control" parent="Raiz/Superior/FilaSuperior/PanelOro/ColumnaOro" unique_id=596457268]
 custom_minimum_size = Vector2(130, 8)
@@ -163,7 +153,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"LabelPeque"
 theme_override_font_sizes/font_size = 10
-text = "Mínimo 54 oro"
+text = "Meta: 54 oro"
 
 [node name="EspacioIzq" type="Control" parent="Raiz/Superior/FilaSuperior" unique_id=2041027393]
 layout_mode = 2
@@ -222,44 +212,13 @@ theme_type_variation = &"LabelPeque"
 theme_override_font_sizes/font_size = 10
 text = "Barco 0 / 300"
 
-[node name="PanelSogas" type="PanelContainer" parent="Raiz" unique_id=1373899763]
-layout_mode = 0
-offset_left = 12.0
-offset_top = 72.0
-offset_right = 12.0
-offset_bottom = 72.0
-mouse_filter = 2
-theme_type_variation = &"PanelHUD"
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
-
-[node name="ColumnaSogas" type="VBoxContainer" parent="Raiz/PanelSogas" unique_id=630889557]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 3
-
-[node name="TituloSogas" type="Label" parent="Raiz/PanelSogas/ColumnaSogas" unique_id=918470760]
+[node name="Barcos" type="Label" parent="Raiz/Superior/FilaSuperior/PanelDia/ColumnaDia" unique_id=2035053464]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 theme_type_variation = &"LabelPeque"
 theme_override_font_sizes/font_size = 10
-text = "SOGAS"
-
-[node name="ListaSogas" type="VBoxContainer" parent="Raiz/PanelSogas/ColumnaSogas" unique_id=1820912348]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 3
-
-[node name="ListaPedidos" type="VBoxContainer" parent="Raiz" unique_id=1312573255]
-unique_name_in_owner = true
-layout_mode = 0
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -200.0
-offset_top = 72.0
-offset_right = -12.0
-offset_bottom = 72.0
-mouse_filter = 2
-theme_override_constants/separation = 4
+text = "Barcos: 0 / 3"
 
 [node name="Inferior" type="MarginContainer" parent="Raiz" unique_id=1887638492]
 unique_name_in_owner = true
