@@ -161,10 +161,16 @@ func _obtener_rids_ignorados() -> Array[RID]:
 		if nodo is CollisionObject3D:
 			rids.append((nodo as CollisionObject3D).get_rid())
 
-	var padre: Node = get_parent()
-	if padre != null:
-		for hijo in padre.find_children("*", "CollisionObject3D", true, false):
-			rids.append((hijo as CollisionObject3D).get_rid())
+	if _punto_mano != null:
+		var nodo_actual: Node = _punto_mano.get_parent()
+		while nodo_actual != null:
+			if nodo_actual is PhysicsBody3D:
+				var jugador := nodo_actual as PhysicsBody3D
+				rids.append(jugador.get_rid())
+				for hijo in jugador.find_children("*", "CollisionObject3D", true, false):
+					rids.append((hijo as CollisionObject3D).get_rid())
+				break
+			nodo_actual = nodo_actual.get_parent()
 
 	return rids
 

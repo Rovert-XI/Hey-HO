@@ -78,6 +78,7 @@ func lanzar_hacia_punto(destino_global: Vector3, objeto_tocado: Object = null) -
 		return
 
 	objetivo_enganchado.emit(objeto_tocado, destino_global)
+	get_tree().call_group("controlador_estaciones", "_on_cana_objetivo_enganchado", self, objeto_tocado, destino_global)
 
 
 func stop_fishing() -> void:
