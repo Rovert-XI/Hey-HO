@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://dw76i27ua8uma" path="res://Scenes/prenda_recolectable.tscn" id="17_i66cl"]
 [ext_resource type="Script" uid="uid://wogiy2030y7" path="res://Scenes/lanzador_prenda.gd" id="18_q6bmp"]
 [ext_resource type="PackedScene" uid="uid://yvbhs74efvve" path="res://Scenes/prenda_proyectil.tscn" id="19_q6bmp"]
+[ext_resource type="PackedScene" uid="uid://csokgdxygbx4t" path="res://juego/hud.tscn" id="20_y7ef4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vql5j"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
@@ -232,6 +233,7 @@ script = ExtResource("7_vym6w")
 [node name="BarraInventario" type="Node3D" parent="." unique_id=608391529]
 
 [node name="InventarioHotbar" type="CanvasLayer" parent="BarraInventario" unique_id=901210087]
+visible = false
 
 [node name="HBoxContainer" type="HBoxContainer" parent="BarraInventario/InventarioHotbar" unique_id=1221904233]
 custom_minimum_size = Vector2(72, 72)
@@ -299,6 +301,8 @@ script = ExtResource("18_q6bmp")
 equipment_manager_path = NodePath("../EquipmentManager")
 municion_manager_path = NodePath("../MunicionManager")
 escena_prenda_proyectil = ExtResource("19_q6bmp")
+
+[node name="Hud" parent="." unique_id=273287611 instance=ExtResource("20_y7ef4")]
 
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/ResorteraBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
 [connection signal="pressed" from="BarraInventario/InventarioHotbar/HBoxContainer/PiedraBttn" to="EquipmentManager" method="seleccionar_item" binds= [1]]
