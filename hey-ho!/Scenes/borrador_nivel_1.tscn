@@ -231,6 +231,7 @@ script = ExtResource("7_vym6w")
 [node name="BarraInventario" type="Node3D" parent="." unique_id=608391529]
 
 [node name="InventarioHotbar" type="CanvasLayer" parent="BarraInventario" unique_id=901210087]
+visible = false
 
 [node name="HBoxContainer" type="HBoxContainer" parent="BarraInventario/InventarioHotbar" unique_id=1221904233]
 custom_minimum_size = Vector2(72, 72)

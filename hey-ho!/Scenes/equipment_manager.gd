@@ -2,6 +2,8 @@ extends Node
 class_name EquipmentManager
 
 signal disparo_soltado(velocidad: Vector3, tipo_item: TipoItem)
+signal tension_cambiada(fraccion: float)
+signal piedras_cambiadas(cantidad: int)
 
 enum TipoItem {
 	NINGUNO,
@@ -34,12 +36,14 @@ enum TipoItem {
 
 @export_group("Dinamica Cana de Pescar")
 @export var alcance_maximo_cana := 14.0
+@export var piedras_iniciales := 3
 
 var item_actual: TipoItem = TipoItem.NINGUNO
 var instancia_resortera: Node3D = null
 var instancia_roca: Node3D = null
 var instancia_cana: CanaPescar = null
 var esta_tensando: bool = false
+var piedras_disponibles: int = 0
 
 var _inicio_arrastre: Vector2 = Vector2.ZERO
 var _velocidad_tiro: Vector3 = Vector3.ZERO
@@ -339,6 +343,7 @@ func _actualizar_arco_desde_cursor(posicion_actual: Vector2) -> void:
 	var jalon: Vector2 = (posicion_actual - _inicio_arrastre).limit_length(limite)
 
 	_velocidad_tiro = _calcular_velocidad_360(jalon, limite)
+	tension_cambiada.emit(clampf(jalon.length() / limite, 0.0, 1.0))
 
 	if _trayectoria != null and _trayectoria.has_method("mostrar_trayectoria"):
 		_trayectoria.mostrar_trayectoria(_obtener_origen_disparo(), _velocidad_tiro)
@@ -358,8 +363,48 @@ func _soltar_y_disparar() -> void:
 func _cancelar_tension() -> void:
 	esta_tensando = false
 	_velocidad_tiro = Vector3.ZERO
+	tension_cambiada.emit(0.0)
 	if _trayectoria != null and _trayectoria.has_method("ocultar_trayectoria"):
 		_trayectoria.ocultar_trayectoria()
+
+
+func _intentar_lanzar_piedra(posicion_pantalla: Vector2) -> void:
+	if piedras_disponibles <= 0 or _punto_mano == null:
+		return
+
+	var loro := get_tree().get_first_node_in_group("loro") as Loro
+	var camara := get_viewport().get_camera_3d()
+	if loro == null or camara == null or not loro.ave.visible:
+		return
+
+	var destino := loro.ave.global_position
+	if camara.is_position_behind(destino):
+		return
+	if camara.unproject_position(destino).distance_to(posicion_pantalla) > 64.0:
+		return
+
+	piedras_disponibles -= 1
+	piedras_cambiadas.emit(piedras_disponibles)
+
+	var roca := MeshInstance3D.new()
+	var malla := SphereMesh.new()
+	malla.radius = 0.12
+	malla.height = 0.24
+	roca.mesh = malla
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color("#79736b")
+	roca.material_override = material
+	var mundo: Node = get_tree().current_scene if get_tree().current_scene != null else self
+	mundo.add_child(roca)
+	roca.global_position = _punto_mano.global_position
+
+	var tween := create_tween()
+	tween.tween_property(roca, "global_position", destino, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(func() -> void:
+		if is_instance_valid(loro):
+			loro.piedra_acerto()
+		roca.queue_free()
+	)
 
 
 func _calcular_velocidad_360(jalon: Vector2, limite: float) -> Vector3:

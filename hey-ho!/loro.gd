@@ -60,6 +60,7 @@ var _pliegue := 1.0         # 1 = alas plegadas (posado), 0 = abiertas (volando)
 
 
 func _ready() -> void:
+	add_to_group("loro")
 	_crear_visual()
 	if modo_prueba:
 		aviso_graznido.connect(func(g): print("graznido: gancho ", g))

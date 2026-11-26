@@ -9,8 +9,12 @@ extends RefCounted
 ##  - Reforzar una soga cuesta 20 oro, suma 25 (máximo 100) y solo se ofrece si está bajo 75.
 
 ## >>> CAMBIAR por la escena real del nivel cuando el equipo la tenga.
-const RUTA_NIVEL := "res://ui/juego/demo_nivel.tscn"
+const RUTA_NIVEL := "res://juego/nivel.tscn"
 const RUTA_GUARDADO := "user://hey_ho.cfg"
+## false = el progreso (niveles, oro, sogas) NO se guarda en disco: cada vez que se abre
+## el juego empieza desde el nivel 1. Los ajustes (volumen, pantalla, pistas) sí se conservan.
+## Poner true si algún día se quiere un botón "Continuar".
+const GUARDAR_PROGRESO := false
 
 const TOTAL_NIVELES := 5
 ## Cuántos niveles están construidos. Los demás se muestran como "PRÓXIMAMENTE".
@@ -123,16 +127,20 @@ static func asegurar_carga() -> void:
 		return
 	_cargado = true
 	cargar()
+	if not GUARDAR_PROGRESO:
+		# Inicio limpio: nivel 1 y, de paso, elimina del archivo el progreso viejo.
+		borrar_progreso()
 	aplicar_ajustes()
 
 
 static func guardar() -> void:
 	var cfg := ConfigFile.new()
-	cfg.set_value("progreso", "nivel_max", nivel_max_desbloqueado)
-	cfg.set_value("progreso", "oro_total", oro_total)
-	cfg.set_value("progreso", "mejor_oro", Array(mejor_oro))
-	for p: String in PLATAFORMAS:
-		cfg.set_value("sogas", p, sogas[p])
+	if GUARDAR_PROGRESO:
+		cfg.set_value("progreso", "nivel_max", nivel_max_desbloqueado)
+		cfg.set_value("progreso", "oro_total", oro_total)
+		cfg.set_value("progreso", "mejor_oro", Array(mejor_oro))
+		for p: String in PLATAFORMAS:
+			cfg.set_value("sogas", p, sogas[p])
 	cfg.set_value("ajustes", "volumen", volumen)
 	cfg.set_value("ajustes", "pantalla_completa", pantalla_completa)
 	cfg.set_value("ajustes", "pistas_teclas", pistas_teclas)
@@ -143,15 +151,16 @@ static func cargar() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(RUTA_GUARDADO) != OK:
 		return
-	nivel_max_desbloqueado = clampi(int(cfg.get_value("progreso", "nivel_max", 1)), 1, TOTAL_NIVELES)
-	oro_total = maxi(0, int(cfg.get_value("progreso", "oro_total", 0)))
-	var mejores: Array = cfg.get_value("progreso", "mejor_oro", [])
-	for i in mini(mejores.size(), TOTAL_NIVELES):
-		mejor_oro[i] = int(mejores[i])
-	for p: String in PLATAFORMAS:
-		var v: Array = cfg.get_value("sogas", p, [100.0, 100.0])
-		if v.size() == 2:
-			sogas[p] = [float(v[0]), float(v[1])]
+	if GUARDAR_PROGRESO:
+		nivel_max_desbloqueado = clampi(int(cfg.get_value("progreso", "nivel_max", 1)), 1, TOTAL_NIVELES)
+		oro_total = maxi(0, int(cfg.get_value("progreso", "oro_total", 0)))
+		var mejores: Array = cfg.get_value("progreso", "mejor_oro", [])
+		for i in mini(mejores.size(), TOTAL_NIVELES):
+			mejor_oro[i] = int(mejores[i])
+		for p: String in PLATAFORMAS:
+			var v: Array = cfg.get_value("sogas", p, [100.0, 100.0])
+			if v.size() == 2:
+				sogas[p] = [float(v[0]), float(v[1])]
 	volumen = clampf(float(cfg.get_value("ajustes", "volumen", 0.8)), 0.0, 1.0)
 	pantalla_completa = bool(cfg.get_value("ajustes", "pantalla_completa", false))
 	pistas_teclas = bool(cfg.get_value("ajustes", "pistas_teclas", true))
