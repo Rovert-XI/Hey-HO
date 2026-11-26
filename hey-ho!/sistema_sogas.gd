@@ -63,8 +63,12 @@ const SOGAS := {
 }
 
 @export var sistema_sol: SistemaSol
-@export var desgaste_por_lanzamiento := 2.0
-@export var desgaste_por_pedido := 4.0
+## Desgaste que sufre una soga por cada prenda lanzada (de 100 de resistencia: con 6 lanzamientos sobre la misma soga
+## llega a 0, empieza a parpadear y comienza la cuenta atrás de 30 s). El tiro cae en la plataforma y se reparte
+## entre sus dos sogas según dónde caiga.
+@export var desgaste_por_lanzamiento := 17.0
+## Desgaste de las sogas del despacho por cada pedido entregado (3 entregas sobre la misma soga la dejan en 0).
+@export var desgaste_por_pedido := 34.0
 ## Multiplica todo el desgaste. Útil para DEMOSTRAR la mecánica sin jugar el nivel entero (por ejemplo 10).
 @export var multiplicador_desgaste := 1.0
 @export var modo_prueba := false

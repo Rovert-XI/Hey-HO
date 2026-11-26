@@ -55,12 +55,12 @@ func _correr() -> void:
 	print("[3] multiplicador de desgaste")
 	sg.cargar({})
 	sg.registrar_lanzamiento("izquierda", -1.0)
-	check(sg.sogas["lavadora"][0] == 98.0, "×1: -2")
-	sg.multiplicador_desgaste = 10.0
+	check(sg.sogas["lavadora"][0] == 83.0, "×1: -17")
+	sg.multiplicador_desgaste = 2.0
 	sg.registrar_lanzamiento("derecha", 7.5)
-	check(sg.sogas["tendedero"][1] == 80.0, "×10: -20")
+	check(sg.sogas["tendedero"][1] == 66.0, "×2: -34")
 	sg.registrar_pedido(-0.4)
-	check(sg.sogas["despacho"][0] == 60.0, "×10 en el despacho: -40")
+	check(sg.sogas["despacho"][0] == 32.0, "×2 en el despacho: -68")
 	sg.multiplicador_desgaste = 1.0
 
 	print("[4] reparación pública")
