@@ -3,7 +3,7 @@ extends Node
 ## CONTROLADOR DEL NIVEL: el "director" que junta todas las piezas de un nivel real.
 ##   - Lleva el tiempo, los pedidos (clientes) y el oro del día.
 ##   - Usa el sol, las sogas y el loro del mapa, y conecta el HUD de Kevin a ellos.
-##   - Crea la lavadora y el tendedero (EstacionesRopa) y los conecta con el loro, el HUD y la entrega.
+##   - Conecta la lavadora y el tendedero (EstacionesRopa) del mapa con el loro, el HUD y la entrega.
 ##   - Dibuja las ZONAS del piso: el pirata tiene que caminar hasta cada una para usarla.
 ##   - Al terminar (se acaba el tiempo, pasan todos los clientes o se suelta una base) guarda el
 ##     resultado y va a la pantalla de Resultado.
@@ -14,11 +14,11 @@ extends Node
 ##   1 ............ resortera: apuntar con clic sostenido y soltar. La prenda llega a la lavadora
 ##                  (tiro a la izquierda) o al tendedero (a la derecha). Es la ÚNICA forma de que la ropa llegue.
 ##   2 ............ piedra: se equipa con el 2 y sirve para espantar al loro (Isabella)
-##   3 ............ caña (la de Isabella): clic para lanzar la boya, otro clic para recogerla.
-##                  Con la boya sobre la lavadora o el tendedero recoge la prenda lista (1 s);
-##                  con la boya en el agua rescata una prenda caída (2 s). Hay que estar en la zona.
+##   3 ............ caña (la de Isabella): clic sobre la lavadora o el tendedero recoge la prenda lista;
+##                  clic en el aro amarillo del agua rescata una prenda caída. Eso lo hace el
+##                  ControladorEstaciones de Isabella sobre la MISMA EstacionesRopa que usa este script.
 ##   E ............ entregar el pedido en el despacho (con prendas secas en la mano)
-##   R (mantener) . reparar la soga de la zona donde estás parado
+##   R (mantener) . reparar la soga que tengas al lado (cada soga se repara parado junto a ella)
 ##
 ## Las teclas de ESTE script (E y R) están en las constantes TECLA_* de abajo. Las de Isabella (P, 1, 2, 3)
 ## las lee su propio código; aquí solo se listan para que las ayudas en pantalla digan siempre lo mismo.
@@ -90,7 +90,6 @@ var _prendas_antes := -1
 var _frente_antes := -1                    # estado de la prenda que iba primera en la cola de munición
 var _entrega_hecha := false                # ya se entregó con esta pulsación de E (hay que soltar E para entregar otra)
 var _e_antes := false                      # E estaba pulsada / la boya estaba lanzada en el fotograma anterior
-var _boya_antes := false
 var _r_antes := false
 var _item_hud := -1                        # herramienta que el HUD de Kevin tiene marcada (para no repetir)
 var _zonas := {}                           # nombre -> {"mat": material del marcador, "texto": Label3D}
@@ -131,8 +130,11 @@ func _ready() -> void:
 	if _equipo and _equipo.has_signal("piedras_cambiadas"):
 		_equipo.piedras_cambiadas.connect(hud.set_piedras)
 		hud.set_piedras(int(_equipo.get("piedras_disponibles")))
+	_ocultar_barras_sogas_del_hud()       # el desgaste ahora se ve sobre la propia soga
 	sogas.nivel_perdido.connect(_on_base_suelta)
 	sogas.reparacion_cobrada.connect(_on_reparacion_cobrada)
+	sogas.soga_en_peligro.connect(_on_soga_en_peligro)
+	sogas.soga_rota.connect(_on_soga_rota)
 
 	sogas.cargar(EstadoJuego.sogas)       # las sogas pasan de un día a otro (y las que compró en el taller)
 	sistema_sol.poner_nivel(_n, false)    # el sol a la hora de este nivel
@@ -147,7 +149,6 @@ func _process(delta: float) -> void:
 	hud.set_tiempo(_tiempo)
 	_avanzar_pedidos(delta)
 	_leer_entrega()
-	_leer_cana(delta)
 	_actualizar_zonas()
 	_leer_reparacion(delta)
 	_sincronizar_hud()
@@ -265,11 +266,14 @@ func _on_prendas_cambiaron(cantidad: int) -> void:
 		_contar_tiro.call_deferred(disparada)  # deja que EquipmentManager termine de avisar el tiro
 
 
-## Calcula dónde cayó el tiro y lo manda a lanzar(): izquierda = lavadora, derecha = tendedero.
-func _contar_tiro(estado: int) -> void:
+## Calcula dónde cae el tiro y desgasta la soga de esa plataforma: izquierda = lavadora, derecha = tendedero.
+## OJO: aquí NO se mete la prenda a la lavadora ni al tendedero. Eso lo hace la propia prenda lanzada
+## (PrendaProyectil) cuando choca con la estación; si también se hiciera aquí, cada tiro quedaría registrado
+## dos veces (una prenda de más colgada en el tendedero, y el loro se llevaría una que no es).
+func _contar_tiro(_estado: int) -> void:
 	var origen := _punto_mano.global_position if _punto_mano else Vector3.ZERO
 	var x := x_de_caida(origen, _ultima_velocidad)
-	lanzar("izquierda" if x < LIMITE_LADOS else "derecha", x, estado)
+	sogas.registrar_lanzamiento("izquierda" if x < LIMITE_LADOS else "derecha", x)
 
 
 ## x donde cae una prenda lanzada desde `origen` con `velocidad` (tiro parabólico, suelo en y = 0).
@@ -280,7 +284,8 @@ static func x_de_caida(origen: Vector3, velocidad: Vector3) -> float:
 
 
 # ---------------------------------------------------------------- API pública
-## Un tiro: desgasta la soga y la prenda entra a la lavadora (izquierda) o al tendedero (derecha).
+## Tiro manual (para quien quiera simularlo): desgasta la soga y mete la prenda a la lavadora (izquierda) o al
+## tendedero (derecha). El tiro real de la resortera NO pasa por aquí: la prenda se registra sola al chocar.
 ## `estado` es el de la prenda lanzada (0 sucia, 1 lavada, 2 seca); sin él se asume la correcta para ese lado.
 func lanzar(lado: String, x := NAN, estado := -1) -> void:
 	if _terminado:
@@ -379,10 +384,16 @@ func _nuevo_pedido() -> void:
 # ---------------------------------------------------------------- Lavadora y tendedero
 ## Crea las estaciones dentro del mapa y las conecta: tendedero <-> loro, y avisos en el HUD.
 func _crear_estaciones() -> void:
-	estaciones = EstacionesRopa.new()
-	estaciones.name = "EstacionesRopa"
 	var mapa := get_node_or_null("Mapa")
-	(mapa if mapa else self).add_child(estaciones)
+	# El mapa de Isabella ya trae su EstacionesRopa (con ControladorEstaciones y los modelos de la lavadora y el
+	# tendedero): se usa ESA, para no tener dos estaciones distintas. Solo se crea una si el mapa no la trae.
+	estaciones = mapa.find_child("EstacionesRopa", false, false) as EstacionesRopa if mapa else null
+	if estaciones == null:
+		estaciones = EstacionesRopa.new()
+		estaciones.name = "EstacionesRopa"
+		(mapa if mapa else self).add_child(estaciones)
+	# El loro solo va por un gancho que de verdad tenga una prenda colgada.
+	loro.hay_prenda = func(g: int) -> bool: return g >= 0 and g < EstacionesRopa.GANCHOS and estaciones.tendedero[g] != null
 	# Al tender, el loro empieza a contar sus 20 s; al retirar la prenda, deja de interesarse.
 	estaciones.prenda_tendida.connect(func(g: int) -> void: loro.prenda_tendida(g))
 	estaciones.prenda_retirada.connect(func(g: int) -> void: loro.prenda_retirada(g))
@@ -390,21 +401,14 @@ func _crear_estaciones() -> void:
 	# Avisos del HUD en cada evento importante.
 	estaciones.prenda_lavada.connect(func(_i: int) -> void: hud.mostrar_aviso("¡Prenda lavada! Recógela con la caña (3)", "exito"))
 	estaciones.prenda_seca.connect(func(_g: int) -> void: hud.mostrar_aviso("Prenda seca: recógela con la caña (3)", "exito"))
-	estaciones.prenda_al_agua.connect(func(_e: int) -> void: hud.mostrar_aviso("¡Cayó al agua! Lanza la caña al agua para rescatarla", "peligro"))
+	estaciones.prenda_al_agua.connect(func(_e: int) -> void: hud.mostrar_aviso("¡Cayó al agua! Haz clic con la caña en el aro amarillo", "peligro"))
 	estaciones.prenda_perdida.connect(func(_e: int) -> void: hud.mostrar_aviso("Se perdió una prenda", "peligro"))
-	estaciones.prenda_rescatada.connect(func(e: int) -> void: _municion_mas(1, e))   # vuelve con su estado
 
 
 ## El loro agarró la prenda: se quita del gancho.
 func _on_prenda_robada(gancho: int) -> void:
 	if estaciones.robar(gancho):
 		hud.mostrar_aviso("¡El loro se llevó una prenda!", "peligro")
-
-
-## Suma prendas a la cola de munición de Isabella con ese estado (0 sucia, 1 lavada, 2 seca).
-func _municion_mas(n: int, estado := 0) -> void:
-	if _municion and _municion.has_method("agregar_prendas"):
-		_municion.agregar_prendas(n, estado)
 
 
 # ---------------------------------------------------------------- Zonas (dónde está parado el pirata)
@@ -496,7 +500,7 @@ func _avisar(texto: String, tipo := "info") -> void:
 	hud.mostrar_aviso(texto, tipo)
 
 
-# ---------------------------------------------------------------- Entrega (E) y caña (3)
+# ---------------------------------------------------------------- Entrega (E)
 ## E (TECLA_ENTREGAR): entrega el pedido (un toque) cuando el pirata está en la zona DESPACHO.
 func _leer_entrega() -> void:
 	var e := Input.is_key_pressed(TECLA_ENTREGAR)
@@ -512,43 +516,6 @@ func _leer_entrega() -> void:
 	else:
 		_entrega_hecha = false
 	_e_antes = e
-
-
-## La caña de Isabella (CanaPescar) si está equipada (TECLA_CANA, la 3) o null.
-func _cana_equipada() -> CanaPescar:
-	if _equipo == null:
-		return null
-	var c: Variant = _equipo.get("instancia_cana")
-	return c as CanaPescar if is_instance_valid(c) else null
-
-
-## La caña, con la boya lanzada. Mientras la boya esté sobre una estación se va llenando la barra:
-##   - boya en el agua con una prenda caída: la rescata (2 s). Va primero porque se pierde a los 8 s.
-##   - boya sobre la lavadora o el tendedero con una prenda lista: la recoge (1 s).
-## Siempre con el pirata parado en esa zona. Al recoger la boya (otro clic) se reinicia el progreso.
-func _leer_cana(delta: float) -> void:
-	var cana := _cana_equipada()
-	var lanzada := cana != null and cana.linea_lanzada
-	var x_boya := cana.bobber.global_position.x if lanzada else 0.0
-	var sitio := _sitio_cercano()
-	var zona_boya := _zona_en_x(x_boya) if lanzada else ""
-	var en_agua := lanzada and _cerca_del_agua() and _x_en_agua(x_boya) and not estaciones.charcos.is_empty()
-	var en_estacion := lanzada and (sitio == "lavadora" or sitio == "tendedero") \
-		and zona_boya == sitio and estaciones.hay_para_jalar(sitio)
-	if en_agua:
-		estaciones.soltar_jalar()
-		estaciones.rescatar(delta)
-	elif en_estacion:
-		estaciones.soltar_rescate()
-		if estaciones.jalar(sitio, delta) and sitio == "lavadora":
-			_municion_mas(1, EstacionesRopa.LAVADA)   # la prenda lavada vuelve a la munición para lanzarla al tendedero
-	else:
-		estaciones.soltar_jalar()
-		estaciones.soltar_rescate()
-		# Un aviso cuando acaba de caer la boya y no pasó nada (la boya tarda unos instantes en llegar).
-		if lanzada and not _boya_antes:
-			_avisar("Pon la boya sobre la lavadora, el tendedero o el agua, estando en esa zona")
-	_boya_antes = lanzada
 
 
 ## La barra de herramientas de Kevin marca la herramienta que Isabella tiene equipada (1, 2 o 3).
@@ -573,21 +540,52 @@ func _sincronizar_hud() -> void:
 
 
 # ---------------------------------------------------------------- Sogas
-## R (TECLA_REPARAR) mantenida: repara la soga de la plataforma de la zona donde está el pirata (lavadora, tendedero o despacho).
-## Fuera de las zonas no hace nada y avisa.
+## R (TECLA_REPARAR) mantenida: repara la soga que tiene el pirata junto a él (a menos de ALCANCE_REPARACION en x).
+## Si hay varias al alcance, la más dañada. Lejos de toda soga no hace nada y avisa.
 func _leer_reparacion(delta: float) -> void:
 	var r := Input.is_key_pressed(TECLA_REPARAR)
 	if r:
-		var sitio := _sitio_cercano()
-		if sitio != "":
-			reparar(delta, sitio)
+		if _punto_mano == null:
+			reparar(delta)                # sin jugador en el mapa (para probar el nivel solo): la más dañada
 		else:
-			dejar_de_reparar()
-			if not _r_antes:
-				_avisar("Camina hasta una zona y mantén %s para reparar su soga" % _tecla(TECLA_REPARAR))
+			var x := _punto_mano.global_position.x
+			var soga := sogas.soga_cercana(x)
+			if not soga.is_empty():
+				sogas.mantener_reparacion(soga["p"], delta, soga["i"])
+			else:
+				dejar_de_reparar()
+				if not _r_antes:
+					if sogas.hay_soga_cerca(x):
+						_avisar("Esa soga está en perfecto estado")
+					else:
+						_avisar("Párate junto a una soga y mantén %s para repararla" % _tecla(TECLA_REPARAR))
 	else:
 		dejar_de_reparar()
 	_r_antes = r
+
+
+## El panel de barras de desgaste del HUD de Kevin ya no se usa: las sogas muestran su desgaste en el mapa.
+func _ocultar_barras_sogas_del_hud() -> void:
+	var panel := hud.find_child("PanelSogas", true, false) as Control
+	if panel != null:
+		panel.hide()
+
+
+## Nombre de la plataforma para los avisos.
+func _nombre_plataforma(p: String) -> String:
+	return TITULO_ZONA.get(p, p).capitalize()
+
+
+## La soga llegó al desgaste máximo: parpadea y quedan 30 s para repararla gratis.
+func _on_soga_en_peligro(p: String, _i: int) -> void:
+	hud.mostrar_aviso("¡Soga de %s a punto de romperse! Párate junto a ella y repárala con R (%d s)" % [
+		_nombre_plataforma(p), int(SistemaSogas.T_ROTURA)], "peligro")
+
+
+## Pasaron los 30 s: la soga se rompió y repararla ya cuesta.
+func _on_soga_rota(p: String, _i: int) -> void:
+	hud.mostrar_aviso("¡Se rompió una soga de %s! Repararla cuesta %d monedas" % [
+		_nombre_plataforma(p), SistemaSogas.COSTO_REPARACION], "peligro")
 
 
 ## Una plataforma quedó sin sus dos sogas: se pierde el nivel.
@@ -595,10 +593,12 @@ func _on_base_suelta() -> void:
 	terminar(true)
 
 
-## Reparar una soga cuesta oro: se descuenta del día.
+## Reparar una soga YA ROTA cuesta oro (SistemaSogas.COSTO_REPARACION): se descuenta del día.
+## Si se repara antes de romperse no llega ningún cobro.
 func _on_reparacion_cobrada(costo: int) -> void:
 	_oro = maxi(0, _oro - costo)
 	hud.set_oro(_oro)
+	hud.mostrar_aviso("Reparación: -%d monedas" % costo, "info")
 
 
 ## Recordatorio fijo con los controles del nivel (abajo a la izquierda, en dos líneas cortas para no tapar

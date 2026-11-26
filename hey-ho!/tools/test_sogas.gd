@@ -82,7 +82,9 @@ func _correr() -> void:
 	sg.cargar({})
 	sg._poner("tendedero", 0, 0.0)
 	sg._poner("tendedero", 1, 0.0)
-	check(perdidos[0] == 1 and sg.perdido, "las dos sogas de una plataforma en 0: nivel_perdido (una sola vez)")
+	check(perdidos[0] == 0, "las dos en 0 todavía no pierden: tienen 30 s para repararse")
+	sg._process(SistemaSogas.T_ROTURA + 0.1)   # pasan los 30 s sin repararlas: se rompen las dos
+	check(perdidos[0] == 1 and sg.perdido, "las dos sogas de una plataforma rotas: nivel_perdido (una sola vez)")
 	sg.registrar_lanzamiento("derecha", 7.5)
 	check(perdidos[0] == 1, "ya perdido: no se desgasta mas ni se avisa dos veces")
 	sg.reiniciar()

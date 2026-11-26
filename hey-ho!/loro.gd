@@ -8,6 +8,13 @@ extends Node3D
 ## Tiempos del concepto (contados desde que se tiende la prenda):
 ##   11 s aviso · 20 s el loro LLEGA al gancho · 23 s se lleva la prenda.
 ## El vuelo de entrada ocupa los 1,6 s anteriores a la llegada (empieza a los 18,4 s).
+##
+## REGLAS (para que solo robe lo que de verdad está tendido y a su hora):
+##   - Solo va por un gancho que TENGA una prenda colgada (se lo pregunta a `hay_prenda`, que pone el nivel).
+##   - Si la prenda desaparece (la recogen, se reinicia el tendedero...) en cualquier momento, incluso en pleno
+##     picotazo, se va con las garras vacías: nunca se lleva una prenda que ya no está.
+##   - Un solo robo a la vez: si el loro está ocupado con otra prenda y a ésta se le pasa la hora de llegada (20 s),
+##     ya no la va a robar (se salva).
 
 signal aviso_graznido(gancho: int)
 signal loro_se_acerca(gancho: int)   # entra a la pantalla (por si quieren sonido de alas)
@@ -33,6 +40,9 @@ const CREMA := Color("#F6E7B0")
 ## Punto fuera de la pantalla por donde entra el loro (con cámara ortogonal Size 9 en 16:9 se ve hasta x ≈ 10,5).
 @export var origen_vuelo := Vector3(15.0, 3.5, 3.5)
 @export var modo_prueba := false
+## Pregunta si hay una prenda colgada en ese gancho: func(gancho: int) -> bool. La pone el controlador del nivel.
+## Sin ella (por ejemplo probando el loro solo) se asume que la prenda siempre está.
+var hay_prenda: Callable = Callable()
 
 var estado := Estado.INACTIVO
 var edad := {}
@@ -80,9 +90,10 @@ func prenda_tendida(gancho: int) -> void:
 func prenda_retirada(gancho: int) -> void:
 	edad.erase(gancho)
 	if edad.is_empty():
-		marca_aviso.visible = false   # NUEVO: ya no hay prendas, se quita la sombra de aviso
-	if en_gancho == gancho and (estado == Estado.ACERCANDO or estado == Estado.POSADO):
-		_huir(false, false)   # la prenda ya no está: se va tranquilo, sin llevarse nada
+		marca_aviso.visible = false   # ya no hay prendas, se quita la sombra de aviso
+	# Incluye ROBANDO (el picotazo): si la prenda se retira justo entonces, se va sin llevarse nada.
+	if en_gancho == gancho and (estado == Estado.ACERCANDO or estado == Estado.POSADO or estado == Estado.ROBANDO):
+		_huir(false, false)
 
 
 func piedra_acerto() -> void:
@@ -113,13 +124,20 @@ func _process(delta: float) -> void:
 	_t += delta
 	_animar_alas()
 	for g: int in edad.keys():
+		if not _hay_prenda_en(g):
+			_prenda_desaparecio(g)               # ya no hay nada que robar en ese gancho
+			continue
 		edad[g] += delta
 		if not avisado[g] and edad[g] >= T_AVISO:
 			avisado[g] = true
 			_mostrar_marca(g)
 			aviso_graznido.emit(g)
-		if estado == Estado.INACTIVO and not a_salvo[g] and edad[g] >= T_LLEGADA - T_VUELO:
+		if g == en_gancho or a_salvo[g]:
+			continue
+		if estado == Estado.INACTIVO and edad[g] >= T_LLEGADA - T_VUELO and edad[g] < T_LLEGADA:
 			_acercar(g)
+		elif edad[g] >= T_LLEGADA:
+			a_salvo[g] = true                    # el loro estaba ocupado y perdió su hora: esta prenda se salva
 	if estado == Estado.POSADO:
 		t_en_gancho += delta
 		ave.position.y = _y_posado + sin(_t * 3.0) * 0.015     # respira
@@ -128,6 +146,16 @@ func _process(delta: float) -> void:
 
 
 # ------------------------------------------------------------------ Secuencia de animación
+## ¿Hay de verdad una prenda colgada en ese gancho?
+func _hay_prenda_en(g: int) -> bool:
+	return not hay_prenda.is_valid() or bool(hay_prenda.call(g))
+
+
+## La prenda de ese gancho ya no existe: se olvida y, si el loro iba por ella, se va sin nada.
+func _prenda_desaparecio(g: int) -> void:
+	prenda_retirada(g)
+
+
 func _acercar(g: int) -> void:
 	estado = Estado.ACERCANDO
 	en_gancho = g
@@ -147,7 +175,8 @@ func _acercar(g: int) -> void:
 	loro_se_acerca.emit(g)
 	_matar_tween()
 	_tween = create_tween()
-	_tween.tween_method(_volar.bind(origen_vuelo, ctrl, destino), 0.0, 1.0, T_VUELO) \
+	var duracion := clampf(T_LLEGADA - edad.get(g, 0.0), 0.5, T_VUELO)   # llega a los 20 s de tendida la prenda
+	_tween.tween_method(_volar.bind(origen_vuelo, ctrl, destino), 0.0, 1.0, duracion) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_tween.tween_callback(_posar.bind(g))
 
@@ -176,6 +205,9 @@ func _picotear() -> void:
 func _agarrar() -> void:
 	var g := en_gancho
 	edad.erase(g)
+	if not _hay_prenda_en(g):         # la prenda ya no estaba: se va con las garras vacías
+		_huir(false, false)
+		return
 	prenda.visible = true             # ahora la lleva en las garras
 	prenda_robada.emit(g)             # el juego quita la prenda del gancho en este instante
 	_huir(true, false)
