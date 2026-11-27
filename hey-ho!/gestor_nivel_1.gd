@@ -162,9 +162,8 @@ func _resolver_escena_recolectable(raiz: Node) -> void:
 			return
 
 	for ruta in [
-		"res://prenda_recolectable.tscn",
-		"res://escenas/prenda_recolectable.tscn",
-		"res://scenes/prenda_recolectable.tscn"
+		"res://Scenes/prenda_recolectable.tscn",
+		"res://prenda_recolectable.tscn"
 	]:
 		if ResourceLoader.exists(ruta):
 			escena_prenda_recolectable = load(ruta) as PackedScene

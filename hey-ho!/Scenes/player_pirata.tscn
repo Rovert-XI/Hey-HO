@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://nohtuuaeq1uf"]
+
+[ext_resource type="Script" uid="uid://c7e0ujjg1btlj" path="res://Scenes/pirata_nivel1.gd" id="1_g0vn5"]
+[ext_resource type="Script" uid="uid://ipj55x2e2jld" path="res://Scenes/trayectoria.gd" id="2_vknbo"]
+[ext_resource type="Script" uid="uid://0t038g52tsnc" path="res://Scenes/modelo_pirata_cuchito.gd" id="3_g0vn5"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vivrt"]
+size = Vector3(0.8601074, 1.5723267, 0.62438965)
+
+[node name="PlayerPirata" type="CharacterBody3D" unique_id=2082758314]
+script = ExtResource("1_g0vn5")
+
+[node name="ModeloPirataCuchito" type="Node3D" parent="." unique_id=1729983970]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+script = ExtResource("3_g0vn5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1855218657]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0021452904, 0.50083244, 0.031921387)
+shape = SubResource("BoxShape3D_vivrt")
+
+[node name="PuntoMano" type="Node3D" parent="." unique_id=934167012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33982506, 0.21027267, 0.08739346)
+
+[node name="TrayectoriaResortera" type="Node3D" parent="PuntoMano" unique_id=133570193]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.011597335, -0.030651122)
+script = ExtResource("2_vknbo")

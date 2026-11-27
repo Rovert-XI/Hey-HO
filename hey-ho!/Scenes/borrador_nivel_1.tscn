@@ -1,13 +1,12 @@
 [gd_scene format=3 uid="uid://3gwmtsf6ove3"]
 
-[ext_resource type="Script" uid="uid://c7e0ujjg1btlj" path="res://Scenes/pirata_nivel1.gd" id="1_8lox6"]
 [ext_resource type="Script" uid="uid://baau766y000uf" path="res://ScriptsZonaA/sistema_sol.gd" id="1_gh6xl"]
 [ext_resource type="Script" uid="uid://nhc5ecetoqdj" path="res://scripts/ciclo_dia.gd" id="2_wwye2"]
 [ext_resource type="Script" uid="uid://dbr8rbtfmtedi" path="res://sistema_sogas.gd" id="4_6wmma"]
 [ext_resource type="Script" uid="uid://cxhffgiyn2wg0" path="res://loro.gd" id="5_r5xcc"]
+[ext_resource type="PackedScene" uid="uid://nohtuuaeq1uf" path="res://Scenes/player_pirata.tscn" id="6_7f3xw"]
 [ext_resource type="Script" uid="uid://kfrry6paltoy" path="res://cielo_atardecer.gd" id="6_wnnrj"]
 [ext_resource type="Texture2D" uid="uid://dl0sopwxj0j5n" path="res://Assets/Cuadros_Inventario/BttnResortera/normal.png" id="7_satd5"]
-[ext_resource type="Script" uid="uid://ipj55x2e2jld" path="res://Scenes/trayectoria.gd" id="7_vym6w"]
 [ext_resource type="Script" uid="uid://c76h5yqqdv63k" path="res://Scenes/equipment_manager.gd" id="7_wwye2"]
 [ext_resource type="PackedScene" uid="uid://gg4j31gb3604" path="res://Scenes/resortera_item.tscn" id="8_p2u03"]
 [ext_resource type="Texture2D" uid="uid://6qhuqnlibm2t" path="res://Assets/Cuadros_Inventario/BttnResortera/pressed.png" id="8_vym6w"]
@@ -65,14 +64,6 @@ sky = SubResource("Sky_7yjhc")
 ambient_light_source = 3
 ambient_light_color = Color(0.79607844, 0.8862745, 0.99607843, 1)
 tonemap_mode = 2
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_q6bmp"]
-radius = 0.3
-height = 1.0
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xrivr"]
-radius = 0.3095703
-height = 1.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vql5j"]
 albedo_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
@@ -212,22 +203,8 @@ entorno = NodePath("../WorldEnvironment")
 [node name="PlayerPirata" type="Node3D" parent="." unique_id=1029083601]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6315912, 0, 0.7771151)
 
-[node name="CharacterBody3D2" type="CharacterBody3D" parent="PlayerPirata" unique_id=803699823]
+[node name="CharacterBody3D2" parent="PlayerPirata" unique_id=2082758314 instance=ExtResource("6_7f3xw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 0)
-script = ExtResource("1_8lox6")
-
-[node name="Pirata" type="MeshInstance3D" parent="PlayerPirata/CharacterBody3D2" unique_id=397719774]
-mesh = SubResource("CapsuleMesh_q6bmp")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerPirata/CharacterBody3D2" unique_id=777148591]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0037322044, 0.0022713542, 0)
-shape = SubResource("CapsuleShape3D_xrivr")
-
-[node name="PuntoMano" type="Node3D" parent="PlayerPirata/CharacterBody3D2" unique_id=759668694]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3176577, -0.21595377, 0)
-
-[node name="TrayectoriaResortera" type="Node3D" parent="PlayerPirata/CharacterBody3D2/PuntoMano" unique_id=886904180]
-script = ExtResource("7_vym6w")
 
 [node name="BarraInventario" type="Node3D" parent="." unique_id=608391529]
 
