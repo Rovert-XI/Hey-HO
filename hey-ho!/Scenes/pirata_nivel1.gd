@@ -5,7 +5,7 @@ extends CharacterBody3D
 @export var gravedad: float = 9.8
 @export var eje_z_en_lugar_de_x: bool = false
 
-@onready var visual_mesh: Node3D = $Pirata
+@onready var visual_mesh: Node3D = $ModeloPirataCuchito
 
 
 func _ready() -> void:
